@@ -1,0 +1,16 @@
+version: '3.9'
+
+services:
+  flaskapp:
+    build: .
+    devices:
+      - "/dev/ppp:/dev/ppp"
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - .:/app 
+    ports:
+      - "5000:8000"
+    environment:
+      - FLASK_APP=main.py
+      - FLASK_ENV=development  # Enables auto-reload & debug mode
