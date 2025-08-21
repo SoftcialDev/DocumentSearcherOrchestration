@@ -36,7 +36,8 @@ def sharepoint_hook():
 ####################
 @app.route("/list-topics", methods=["GET"])
 def list_topics():
-    return api_topics.list_topics()
+    #return api_topics.list_topics()
+    return [{'name': 'llm'}]
     
 
 @app.route("/create-topic", methods=["POST"])
@@ -90,7 +91,8 @@ def delete_topic():
 def list_sources():
     topic = request.args.get("topic")
 
-    result = api_sources.list_sources(topic)
+    #result = api_sources.list_sources(topic)
+    return [{'topic': 'llm', 'name': 'ELI', 'id': '4dcd27af-45d4-476d-baed-f92a1c56fce2,1897ff05-59e9-4ea4-9efd-87ebabc8b51d,01IRFFWMXVC6KTYUPD6JE3BKPJMGX2BOBD', 'schedule': '1230', 'site': 'Sharepoint'}, {'topic': 'llm', 'name': 'AI', 'id': '4dcd27af-45d4-476d-baed-f92a1c56fce2,1897ff05-59e9-4ea4-9efd-87ebabc8b51d,01IRFFWMQDP6LGY35NVJEKZDPZ7T7DWXJN', 'schedule': '0100', 'site': 'Sharepoint'}, {'topic': 'llm', 'name': 'IndexedDB', 'id': '4dcd27af-45d4-476d-baed-f92a1c56fce2,1897ff05-59e9-4ea4-9efd-87ebabc8b51d,01IRFFWMXSNDWPPWM7HFEZHVSYW6GO7EL7', 'schedule': '0100', 'site': 'Sharepoint'}]
 
     return jsonify(result), 200
 
