@@ -150,8 +150,9 @@ export default function OneDriveFolderPicker({topicName, onPicked}: PickerProps)
     <IconButton
       iconSrc="https://upload.wikimedia.org/wikipedia/commons/3/3c/Microsoft_Office_OneDrive_%282019%E2%80%93present%29.svg"
       alt="Add topic"
-      size={72}
+      size={24}
       onClick={openPicker}
+      name="OneDrive"
     />
   );
 }

@@ -6,9 +6,8 @@ export default function Header() {
 
   const navStyle = {
     padding: "10px",
-    background: "#6c4aa5", // purple tone
+    background: "#002A3E", // purple tone
     color: "white",
-    marginBottom: "20px",
     display: "flex",
     justifyContent: account ? "space-between" : "flex-end",
     alignItems: "center",
@@ -16,7 +15,7 @@ export default function Header() {
 
   const linkStyle = {
     marginRight: "10px",
-    color: "#e9d8fd", // light lavender
+    color: "#ffffff", // light lavender
     textDecoration: "none",
   };
 
@@ -25,12 +24,12 @@ export default function Header() {
       <nav style={navStyle}>
         <button
           style={{
-            background: "#b794f4",
+            background: "#09CAC7",
             border: "none",
             padding: "6px 12px",
             borderRadius: "4px",
             cursor: "pointer",
-            color: "#2d1b4e",
+            color: "#002A3E",
           }}
           onClick={login}
         >
@@ -51,12 +50,12 @@ export default function Header() {
         <span style={{ marginRight: "10px" }}>{account.username}</span>
         <button
           style={{
-            background: "#b794f4",
+            background: "#09CAC7",
             border: "none",
             padding: "6px 12px",
             borderRadius: "4px",
             cursor: "pointer",
-            color: "#2d1b4e",
+            color: "#002A3E",
           }}
           onClick={logout}
         >

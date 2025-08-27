@@ -152,12 +152,13 @@ export default function SharePointFolderPicker({ topicName, onPicked }: PickerPr
     window.addEventListener("message", hostListener);
   }
 
-  return (
-    <IconButton
-      iconSrc="https://upload.wikimedia.org/wikipedia/commons/e/e1/Microsoft_Office_SharePoint_%282019%E2%80%93present%29.svg"
-      alt="Add topic"
-      size={72}
-      onClick={openPicker}
-    />
+  return (     
+      <IconButton
+        iconSrc="https://upload.wikimedia.org/wikipedia/commons/e/e1/Microsoft_Office_SharePoint_%282019%E2%80%93present%29.svg"
+        alt="Add topic"
+        size={24}
+        onClick={openPicker}
+        name="Sharepoint"
+      />
   );
 }

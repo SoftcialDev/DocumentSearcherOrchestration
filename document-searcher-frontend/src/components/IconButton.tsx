@@ -5,6 +5,7 @@ interface IconButtonProps {
   alt?: string;            // accessible description
   onClick: () => void;
   size?: number;           // icon size in px (default: 20)
+  name?: string;
 }
 
 export default function IconButton({
@@ -12,15 +13,17 @@ export default function IconButton({
   alt = "icon button",
   onClick,
   size = 20,
+  name = ""
 }: IconButtonProps) {
   const style: React.CSSProperties = {
     background: "none",
     border: "none",
-    padding: 0,
+    padding: "5px 10px",
     cursor: "pointer",
-    display: "inline-flex",
+    display: "flex",
+    // display: "inline-flex",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "center",    
   };
 
   return (
@@ -30,6 +33,7 @@ export default function IconButton({
         alt={alt}
         style={{ width: size, height: size, display: "block" }}
       />
+      <span style={{marginLeft: "10px"}}>{name}</span>
     </button>
   );
 }

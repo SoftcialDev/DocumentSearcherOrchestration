@@ -141,6 +141,7 @@ export default function FolderPicker() {
       onClick={openPicker}
       text={"Seleccionar carpetas"}
       type={"ACCEPT"}
+      icon="none"
     />
   );
 }

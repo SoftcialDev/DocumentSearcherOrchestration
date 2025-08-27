@@ -44,7 +44,7 @@ export default function Dropdown({
 
   return (
     <div>
-      <select id="dropdown" value={selected} onChange={handleChange}>
+      <select id="dropdown" value={selected} onChange={handleChange} style={{color: "#ffffff", background: "#024A59", borderRadius: "5px"}}>
         {items.map((item, index) => (
           <option key={index} value={item.name}>
             {item.name}
