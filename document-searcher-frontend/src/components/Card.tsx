@@ -35,7 +35,7 @@ export default function Card({ icon, title, description, buttonText, onButtonCli
 
       {/* Button */}
       <div style={{ display: "flex", justifyContent: "center" }}>
-        <Button text={buttonText} onClick={onButtonClick} type={buttonType} />
+        <Button text={buttonText} onClick={onButtonClick} type={buttonType}  icon="none"/>
       </div>
     </div>
   );

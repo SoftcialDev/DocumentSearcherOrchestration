@@ -31,13 +31,13 @@ export default function SourcesTable({
 
   return (
     <div className="mt-4">
-      <div className="border border-gray-300 rounded-md overflow-hidden">
+      <div className="rounded-md overflow-hidden">
         {/* header */}
-        <div className="hidden md:flex bg-gray-50 px-4 py-2 text-xs font-semibold text-gray-600 uppercase">
+        <div className="hidden md:flex bg-gray-50 px-4 py-2 text-xs font-semibold text-gray-600 uppercase" style={{background: "#024A59", color: "#ffffff"}}>
           <div className="flex-1 text-left">Name</div>
           <div className="w-48 text-center">Schedule</div>
           <div className="w-48 text-center">Site</div>
-          <div className="w-48 text-center">Control</div>
+          <div className="w-60 text-center">Control</div>
         </div>
 
         {/* rows (scrollable) */}
@@ -58,16 +58,23 @@ export default function SourcesTable({
                 </div>
 
                 <div className="w-48 text-center">
-                  <span className="text-xs px-2 py-0.5 rounded bg-slate-200 uppercase">
+                  <span className="text-xs px-2 py-0.5 rounded bg-slate-200 uppercase" style={{background: "#024A59", color: "#ffffff"}}>
                     {s.site}
                   </span>
                 </div>
 
-                <div className="w-48 text-center">
+                <div className="w-60 text-center" style={{display: "flex", justifyContent: "center"}}>
                   <Button
                     text="Remove"
                     onClick={() => onRemove(s.name, s.id)}
                     type="CANCEL"
+                    icon="remove"
+                  />
+                  <Button
+                    text="Refresh"
+                    onClick={() => console.log("REFRESH")}
+                    type="CANCEL"
+                    icon="refresh"
                   />
                 </div>
               </div>

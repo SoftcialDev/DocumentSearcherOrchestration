@@ -8,7 +8,7 @@ export default function App() {
   return (
     <Router>
       <Header/>
-      <div style={{ margin: "20px" }}>
+      <div style={{ padding: "20px", background: "#002A3E" }}>
         <ContentWrapper>
           <Routes>
             <Route path="/chat" element={<Chat />} />
