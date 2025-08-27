@@ -1,4 +1,5 @@
 from modules.databases import SQLServerConnection, PostgreSQLConnection
+from model_registry import get_model
 from pathlib import Path
 import modules.authenticators as auth
 import modules.conversions as conv
@@ -360,6 +361,7 @@ def delete_embeddings(embeddings: list):
         logging.info(f"Deleted {len(group['records'])} records from {table}.")
         
 def vectorize_and_upload_files(files, table):
+    model = get_model()
     if not files:
         logging.info("No files detected, aborting...")
         return
@@ -376,7 +378,7 @@ def vectorize_and_upload_files(files, table):
                 chunks = conv.pdf_to_chunks(file["path"])
 
             if chunks is not None:
-                embedding = conv.chunks_to_embeddings(chunks)
+                embedding = conv.chunks_to_embeddings(chunks, model)
                 embeddings.append({
                     "table" : table,
                     "itemId" : file["itemId"],

@@ -13,10 +13,10 @@ class PostgreSQLConnection:
     """
 
     def __init__(self):
-        self.pghost = os.getenv("PGHOST") or "sharepointvectordb.postgres.database.azure.com"
-        self.pguser = os.getenv("PGUSER") or "postadmin"
-        self.pgpassword = os.getenv("PGPASSWORD") or "Softcial.2025"
-        self.pgdatabase = os.getenv("PGDATABASE") or "postgres"
+        self.pghost = os.getenv("PGHOST")
+        self.pguser = os.getenv("PGUSER")
+        self.pgpassword = os.getenv("PGPASSWORD")
+        self.pgdatabase = os.getenv("PGDATABASE")
         self.pgport = os.getenv("PGPORT", 5432)
 
     def start_connection(self):

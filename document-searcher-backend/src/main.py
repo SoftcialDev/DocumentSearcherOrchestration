@@ -2,8 +2,9 @@ from server import app
 from setup import database_setup, env_checkup, ram_checkup
 from dotenv import load_dotenv
 from orchestration.entrypoint import start_orchestration
-import os
-import logging
+from sentence_transformers import SentenceTransformer
+from model_registry import set_model
+import logging, uvicorn
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -27,8 +28,18 @@ if __name__ == "__main__":
     else:
         logging.info("Starting process with no issues")
 
-    # Start the orchestration process, does not require Flask to be running
-    if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
-        start_orchestration()
+    # Sets the required libraries
+    model = SentenceTransformer("all-mpnet-base-v2")
+    set_model(model)
 
-    app.run(debug=True, port=5000)
+    # Start the orchestration process, does not require Flask to be running
+    start_orchestration()
+    uvicorn.run(
+        "server:app", 
+        host="0.0.0.0", 
+        port=5000, 
+        reload=True,
+        reload_dirs=[".", "modules"],
+        reload_includes=["*.py", "*.env"],
+        reload_excludes=["*.pyc", "node_modules/*"],
+    ) 

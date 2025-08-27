@@ -4,10 +4,12 @@ tika
 python-docx
 sentence-transformers
 psycopg[binary]
-flask
-gunicorn
+fastapi
+uvicorn
 requests>=2.31.0
 pymupdf
 pyodbc
 msal
 psutil
+watchfiles
+selenium

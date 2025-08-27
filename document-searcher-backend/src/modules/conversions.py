@@ -1,10 +1,14 @@
-from sentence_transformers import SentenceTransformer
+from model_registry import get_model
 from docx import Document
 import fitz
 import json
 import logging
-    
-model = SentenceTransformer("all-mpnet-base-v2")
+import os
+
+from dotenv import load_dotenv
+load_dotenv()
+
+PGSCHEME = os.getenv("PGSCHEME")
 
 def get_preset(table: str):
     """
@@ -173,5 +177,6 @@ def chunks_to_embeddings(chunks: list) -> list:
     Returns:
 		list: A list of tuples where each tuple contains the originsl chunk with their resulted embedding
     """
+    model = get_model()
     embeddings = model.encode(chunks, normalize_embeddings=True)
     return list(zip(chunks, embeddings))

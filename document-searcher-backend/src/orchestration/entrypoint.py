@@ -1,5 +1,5 @@
 from modules.databases import PostgreSQLConnection
-from modules import sources
+from sentence_transformers import SentenceTransformer
 from modules import authenticators
 from modules import sequences
 from datetime import datetime
@@ -23,12 +23,9 @@ def process_source(task: Dict[str, Any]) -> None:
     topic = task.get("topic", None)
     if composite and source and topic:
         if source == "Sharepoint":
-            token = authenticators.get_sharepoint_token()
             sequences.start_sharepoint_sequence(composite, topic)
         elif source == "Onedrive":
-            # logging.warning(f"Starting orchestration with {len(tasks)} sources at {schedule}")
-            token = authenticators.get_onedrive_token()
-            # sequences.start_onedrive_sequence()
+            pass
         
 
 def _worker(task_q: Queue) -> None:
