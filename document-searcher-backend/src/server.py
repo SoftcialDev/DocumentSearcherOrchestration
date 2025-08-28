@@ -240,18 +240,18 @@ async def update_source(req: Request):
 ###########################
 # Data Sources collection #
 ###########################
-@app.get("/documents/search")
+@app.get("/api/search/documents")
 async def documents_seach(req: Request):
     query = req.query_params.get("query")
     topic = req.query_params.get("topic")
     format = req.query_params.get("pages", "json")
     return sources.get_document_search(query, topic, format)
 
-@app.get("/nexus-scrapper/search")
+@app.get("/api/search/nexuspj")
 async def nexus_scrapper_search(req: Request):
     pass
 
-@app.get("/sinalevi-scrapper/search")
+@app.get("/api/search/sinalevi")
 async def sinalevi_scrapper_search(req: Request):
     query = req.query_params.get("query")
     pages = req.query_params.get("pages")
@@ -259,7 +259,7 @@ async def sinalevi_scrapper_search(req: Request):
     
     return sources.get_sinalevi_result(query, int(pages), format)
 
-@app.get("/web-scrapper/search")
+@app.get("/api/search/web")
 async def web_scrapper_search(req: Request):
     pass
 
