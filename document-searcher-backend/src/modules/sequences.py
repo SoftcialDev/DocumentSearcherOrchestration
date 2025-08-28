@@ -52,7 +52,7 @@ def start_database_sequence():
         logging.info(f"Fetching source database for {table}")
         query = f"SELECT * FROM {table}"
         result = sqlserver.fetch_all(query)
-        logging.info(f"Obtained {len(result["rows"])} records from source {table}")
+        logging.info(f"Obtained {len(result['rows'])} records from source {table}")
         results[table] = result
 
     originals = {}
@@ -60,7 +60,7 @@ def start_database_sequence():
         logging.info(f"Fetching destination database for {table}")
         query = f"SELECT id, content_hash FROM {table}"
         result = postgresql.fetch_all(query)
-        logging.info(f"Obtained {len(result["rows"])} records from destination {table}")
+        logging.info(f"Obtained {len(result['rows'])} records from destination {table}")
         originals[table] = result
 
     logging.info("Converting data -> human read -> chunks...")
