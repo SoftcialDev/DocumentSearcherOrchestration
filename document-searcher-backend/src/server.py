@@ -5,7 +5,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import api.sources as api_sources
 import api.topics as api_topics
-import api.search as api_search
 import modules.sources as sources
 import re, logging
 
@@ -256,7 +255,7 @@ async def nexus_scrapper_search(req: Request):
 async def sinalevi_scrapper_search(req: Request):
     query = req.query_params.get("query")
     pages = req.query_params.get("pages")
-    format = req.query_params.get("pages", "json")
+    format = req.query_params.get("format", "json")
     
     return sources.get_sinalevi_result(query, int(pages), format)
 

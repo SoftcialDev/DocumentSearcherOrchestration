@@ -1,6 +1,7 @@
 from sentence_transformers import SentenceTransformer
 from modules.databases import PostgreSQLConnection
 from modules.scrappers import SinaleviScrapper
+from modules.search import document_search, sinalevi_search
 from model_registry import get_model
 from datetime import datetime, timedelta, timezone
 from typing import Any
@@ -244,7 +245,13 @@ def download_sharepoint_file(token, manifest, items):
 #############
 def get_document_search(query_text: str, topic: str, source: str,  k: int = 5):
     # Loads the required varaibles
-    result = []
+    result = {
+        "source" : "DocumentSearcher",
+        "query" : query_text,
+        "limit" : k,
+        "timestamp" : datetime.now(timezone.utc).isoformat(),
+        "items" : []
+    }
     db = PostgreSQLConnection()
     model = get_model()
     q_emb = model.encode([query_text], normalize_embeddings=True)[0]
@@ -282,12 +289,11 @@ def get_document_search(query_text: str, topic: str, source: str,  k: int = 5):
         content = (r.get("content") or "").strip()
         title = next((ln.strip() for ln in content.splitlines() if ln.strip()), "")[:120]
         
-        result.append({
+        result["items"].append({
             "id": idx,
             "name": title,
-            "date": "",
             "content": content,
-            "source": "Sinalevi"
+            "url": "www.example.com"
         })
     return result
 

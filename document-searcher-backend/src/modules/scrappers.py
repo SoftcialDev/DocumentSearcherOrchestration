@@ -5,6 +5,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, WebDriverException
+from datetime import datetime, timedelta, timezone
 import time, re, random, logging
 
 class Scrapper(ABC):
@@ -48,7 +49,13 @@ class SinaleviScrapper(Scrapper):
         super().__init__(arguments, experimentals)
 
     def scrappe_website(self, query: str, pages: int):
-        result = []
+        result = {
+            "source" : "DocumentSearcher",
+            "query" : query,
+            "limit" : pages * 10, # Each page contains 10 results
+            "timestamp" : datetime.now(timezone.utc).isoformat(),
+            "items" : []
+        }
         main_url = "https://www.pgrweb.go.cr/SCIJ/main.aspx"
         main_collected = self.request_url(main_url, 3)
 
@@ -102,12 +109,11 @@ class SinaleviScrapper(Scrapper):
 
                     title = re.sub(r'[\\/:*?"<>|]+', "_", title).strip()[:150] or "documento"
 
-                    result.append({
+                    result["items"].append({
                         "id": current_link,
                         "name": title,
-                        "date": "",
                         "content": body,
-                        "source": "Sinalevi"
+                        "url": "www.example.com"
                     })
 
                     current_link += 1
