@@ -200,7 +200,6 @@ def get_sharepoint_content(token: str, sharepoint_site: str, sharepoint_list: st
 def download_sharepoint_file(token, manifest, items):
     files = []
 
-    # Build a set of (drive_id, file_id) from manifest (snake_case)
     manifest_keys = {
         (str(m["drive_id"]), str(m["file_id"]))
         for m in manifest
@@ -211,7 +210,7 @@ def download_sharepoint_file(token, manifest, items):
         drive_id = item.get("driveId")
         item_id  = item.get("driveItemId") or item.get("id")
         file_name = item.get("fileName") or item.get("name")
-        download_dir = ""  # keep your current behavior
+        download_dir = ""
 
         if not drive_id or not item_id or not file_name:
             continue  # missing essentials; skip
@@ -307,12 +306,18 @@ def get_document_search(query_text: str, topic: str, source: str,  k: int = 5):
         content = (r.get("content") or "").strip()
         title = (r.get("title") or "").strip()
         
-        result["items"].append({
-            "id": idx,
-            "name": title,
-            "content": content,
-            "url": "www.example.com"
-        })
+         # Look for an existing item with the same title
+        existing = next((item for item in result["items"] if item["name"] == title), None)
+
+        if existing:
+            existing["content"] += " " + content
+        else:
+            result["items"].append({
+                "id": idx,
+                "name": title,
+                "content": content,
+                "url": "www.example.com"
+            })
     return result
 
 
