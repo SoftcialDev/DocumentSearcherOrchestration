@@ -22,14 +22,31 @@ def document_search(query_text: str, topic: str,  k: int = 5):
 
     k = int(k)
     sql = f"""
+        WITH q(vec) AS (VALUES ('{vec_lit}'::vector)),
+        doc_hits AS (
+            SELECT t.id, MIN(t.vector <=> q.vec) AS min_distance
+            FROM {pgscheme}.{topic} AS t
+            CROSS JOIN q
+            GROUP BY t.id
+            HAVING MIN(t.vector <=> q.vec) < {max_distance}
+        ),
+        top_docs AS (
+            SELECT id, min_distance
+            FROM doc_hits
+            ORDER BY min_distance
+            LIMIT {k}
+        )
         SELECT
-          content AS content,
-          content_hash    AS content_hash,
-          (vector <=> '{vec_lit}'::vector) AS distance
-        FROM {pgscheme}.{topic}
-        WHERE (vector <=> '{vec_lit}'::vector) < {max_distance}
-        ORDER BY distance
-        LIMIT {k};
+            t.id,
+            t.chunk_id,
+            t.content,
+            t.content_hash,
+            (t.vector <=> q.vec)  AS distance,
+            td.min_distance       AS doc_distance
+        FROM {pgscheme}.{topic} AS t
+        JOIN top_docs td USING (id)
+        CROSS JOIN q
+        ORDER BY td.min_distance, t.id, t.chunk_id;
     """
 
     res = db.fetch_all(sql)

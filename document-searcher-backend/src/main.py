@@ -8,29 +8,45 @@ import logging, uvicorn
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
+logging.getLogger("selenium").setLevel(logging.ERROR)
+logging.getLogger("urllib3").setLevel(logging.WARNING)
 
 if __name__ == "__main__":
     # Run a check for minimal configuration needs
-    ram_status = ram_checkup(8)
-    env_error, env_warning = env_checkup()
-
-    if not env_error:
-        db_status = database_setup()
-
-    errors = env_error + ram_status
-    if errors:
-        logging.critical(f"Unable to start process, detected {errors} errors")
+    errors = 0
+    warnings = 0
+    
+    # Checks hardware
+    if not ram_checkup(8) :
+        logging.critical(f"Unable to start process, errors detected in RAM checkup")
         exit()
 
-    warnings = env_warning
+    # Check variables
+    env_error, env_warning = env_checkup()
+    warnings += env_warning
+
+    if env_error:
+        logging.critical(f"Unable to start process, errors detected in ENV checkup")
+        exit()
+
+    # Checks database
+    if not database_setup():
+        logging.critical(f"Unable to start process, errors detected in DB checkup")
+        exit()
+
+    # Sets the required libraries
+    try:
+        model = SentenceTransformer("all-mpnet-base-v2")
+        set_model(model)
+    except:
+        logging.error(f"Unable to load SentenceTransformer")
+        logging.critical(f"Unable to start process, errors detected in ST")
+        exit()
+
     if warnings:
         logging.warning(f"Starting process, detected {warnings} issues")
     else:
         logging.info("Starting process with no issues")
-
-    # Sets the required libraries
-    model = SentenceTransformer("all-mpnet-base-v2")
-    set_model(model)
 
     # Start the orchestration process, does not require Flask to be running
     start_orchestration()

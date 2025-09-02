@@ -38,8 +38,8 @@ class PostgreSQLConnection:
             )
             return conn
         except Exception as e:
-            logging.exception("Error:", e)
-            return {"error": str(e)}
+            logging.error(f"{e}")
+            return None
 
     
     def fetch_all(self, query):
@@ -57,6 +57,9 @@ class PostgreSQLConnection:
             If an error occurs, returns a dictionary with an 'error' key containing the error message.
         """
         conn = self.start_connection()
+        if not conn:
+            logging.error("Unable to connect with database")
+            return None
         try:
             with conn.cursor() as cur:
                 cur.execute(query)
@@ -70,7 +73,7 @@ class PostgreSQLConnection:
                 }
 
         except Exception as e:
-            logging.exception("Error:", e)
+            logging.error(f"{e}")
             return {"error": str(e)}
         finally:
             conn.close()
@@ -86,6 +89,9 @@ class PostgreSQLConnection:
             None. Prints error messages if an exception occurs.
         """
         conn = self.start_connection()
+        if not conn:
+            logging.error("Unable to connect with database")
+            return False
         try:
             with conn.cursor() as cur:
                 cur.execute(query)
@@ -93,9 +99,9 @@ class PostgreSQLConnection:
             return True
         except Exception as e:
             if 'already exists' in str(e):
-                logging.exception(f"Table already exists: {e}")
+                logging.error(f"Table already exists: {e}")
             else:
-                logging.exception(f"Error: {e}")
+                logging.error(f"{e}")
             return False
         finally:
             conn.close()
@@ -112,15 +118,15 @@ class PostgreSQLConnection:
             None. Prints error messages if an exception occurs.
         """
         conn = self.start_connection()
+        if not conn:
+            logging.error("Unable to connect with database")
+            return False
         try:
             with conn.cursor() as cur:
-                cur.executemany(
-                    query,
-                    values
-                )
+                cur.executemany(query, values)
             return True
         except Exception as e:
-            logging.exception("Error:", e)
+            logging.error(f"{e}")
             return False
         finally:
             conn.close()
@@ -188,7 +194,7 @@ class SQLServerConnection:
             }
 
         except Exception as e:
-            logging.exception("Error:", e)
+            logging.error(f"{e}")
             return {"error": str(e)}
         finally:
             conn.close()
@@ -210,7 +216,7 @@ class SQLServerConnection:
             cursor.execute(query)
             conn.commit()
         except Exception as e:
-            logging.exception("Error:", e)
+            logging.error(f"{e}")
         finally:
             conn.close()
 
@@ -225,7 +231,7 @@ class SQLServerConnection:
                 cur.executemany(query, values)
                 conn.commit()
         except Exception as e:
-            logging.exception("Error:", e)
+            logging.error(f"{e}")
         finally:
             conn.close()
 

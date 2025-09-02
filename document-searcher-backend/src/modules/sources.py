@@ -234,7 +234,7 @@ def download_sharepoint_file(token, manifest, items):
             with open(file_path, "wb") as f:
                 for chunk in response.iter_content(chunk_size=8192):
                     f.write(chunk)
-            files.append({"path": file_path, "itemId": item_id})
+            files.append({"path": file_path, "itemName": file_name, "itemId": item_id})
         else:
             pass
 
@@ -269,15 +269,33 @@ def get_document_search(query_text: str, topic: str, source: str,  k: int = 5):
 
     k = int(k)
     sql = f"""
+        WITH q(vec) AS (VALUES ('{vec_lit}'::vector)),
+        doc_hits AS (
+            SELECT t.id, MIN(t.vector <=> q.vec) AS min_distance
+            FROM {pgscheme}.{topic} AS t
+            CROSS JOIN q
+            GROUP BY t.id
+            HAVING MIN(t.vector <=> q.vec) < {max_distance}
+        ),
+        top_docs AS (
+            SELECT id, min_distance
+            FROM doc_hits
+            ORDER BY min_distance
+            LIMIT {k}
+        )
         SELECT
-          content AS content,
-          content_hash    AS content_hash,
-          (vector <=> '{vec_lit}'::vector) AS distance
-        FROM {pgscheme}.{topic}
-        WHERE (vector <=> '{vec_lit}'::vector) < {max_distance}
-        ORDER BY distance
-        LIMIT {k};
-    """
+            t.id,
+            t.chunk_id,
+            t.title,
+            t.content,
+            t.content_hash,
+            (t.vector <=> q.vec)  AS distance,
+            td.min_distance       AS doc_distance
+        FROM {pgscheme}.{topic} AS t
+        JOIN top_docs td USING (id)
+        CROSS JOIN q
+        ORDER BY td.min_distance, t.id, t.chunk_id;
+        """
 
     res = db.fetch_all(sql)
     if isinstance(res, dict) and "error" in res:
@@ -287,7 +305,7 @@ def get_document_search(query_text: str, topic: str, source: str,  k: int = 5):
     
     for idx, r in enumerate(rows, 1):
         content = (r.get("content") or "").strip()
-        title = next((ln.strip() for ln in content.splitlines() if ln.strip()), "")[:120]
+        title = (r.get("title") or "").strip()
         
         result["items"].append({
             "id": idx,
@@ -305,7 +323,14 @@ def get_sinalevi_result(query: str, pages: int, format: str) -> str:
     arguments = [
         "--no-sandbox",
         "--headless=new",
+        "--log-level=3",
+        "--silent-debugger-extension-api",
+        "--disable-dev-shm-usage",
         "--disable-gpu",
+        "--disable-crash-reporter",
+        "--disable-infobars",
+        "--disable-notifications",
+        "--disable-features=Translate,BackForwardCache,UseChromeOSDirectVideoDecoder",
         "--window-size=1365,768",
         "--lang=es-CR",
         "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123 Safari/537.36",
@@ -313,9 +338,10 @@ def get_sinalevi_result(query: str, pages: int, format: str) -> str:
     ]
 
     experimentals = {
-        "excludeSwitches": ["enable-automation"],
+        "excludeSwitches": ["enable-automation", "enable-logging"],
         "useAutomationExtension": False,
     }
+
     sinalevi = SinaleviScrapper(arguments, experimentals)
     result =  sinalevi.scrappe_website(query, pages)
     return result

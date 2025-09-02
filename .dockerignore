@@ -1,0 +1,9 @@
+**/__pycache__/
+**/*.pyc
+**/.pytest_cache/
+node_modules/
+document-searcher-frontend/node_modules/
+document-searcher-frontend/.next/
+document-searcher-frontend/dist/
+document-searcher-frontend/build/
+.env

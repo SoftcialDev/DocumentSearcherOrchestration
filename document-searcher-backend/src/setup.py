@@ -8,7 +8,6 @@ import os
 ################################################
 def database_setup() -> bool:
     PGSCHEME = os.getenv("PGSCHEME")
-
     pgsql = PostgreSQLConnection()
 
     topics_query = f"""
@@ -16,7 +15,8 @@ def database_setup() -> bool:
             name TEXT PRIMARY KEY
         );
     """
-    pgsql.execute_one(topics_query)
+    if not pgsql.execute_one(topics_query):
+        return False
 
     subs_query = f"""
         CREATE TABLE IF NOT EXISTS {PGSCHEME}.sources (
@@ -29,7 +29,8 @@ def database_setup() -> bool:
             FOREIGN KEY (topic) REFERENCES {PGSCHEME}.topics(name) ON DELETE CASCADE
         );
     """
-    pgsql.execute_one(subs_query)
+    if not pgsql.execute_one(subs_query):
+        return False
 
     manifest_query = f"""
         CREATE TABLE IF NOT EXISTS {PGSCHEME}.manifests (
@@ -41,13 +42,14 @@ def database_setup() -> bool:
             PRIMARY KEY (file_id, drive_id)
         );
     """
-    pgsql.execute_one(manifest_query)
+    if not pgsql.execute_one(manifest_query):
+        return False
 
     return True
 
 
 def env_checkup() -> tuple[bool, bool]:
-    error = 0
+    error = False
     warning = 0
 
     # Strictly necessary variables for vector database
@@ -59,7 +61,7 @@ def env_checkup() -> tuple[bool, bool]:
     PGPASSWORD = os.getenv("PGPASSWORD")
     if not PGHOST or not PGUSER or not PGPORT or not PGDATABASE or not PGSCHEME or not PGPASSWORD:
         logging.error("Vector database variables are not set, system will not be able to communicate with vectors")
-        error += 1
+        error = True
 
     # Strictly necessary variables for Sharepoint / Onedrive / Graph
     SESV = os.getenv("SHAREPOINT_ENTRA_SECRET_VALUE")
@@ -70,7 +72,7 @@ def env_checkup() -> tuple[bool, bool]:
     GET = os.getenv("GRAPH_TOKEN_ENDPOINT")
     if not SESV or not SECI or not OESV or not OETI or not OECI or not GET:
         logging.error("Microsoft services variables are not set, system will not be able to download files from sources")
-        error += 1
+        error = True
 
     # Necessary for some functions, can be omitted by using default values
     EXTENSIONS = os.getenv("EXTENSIONS", None)
@@ -85,5 +87,5 @@ def ram_checkup(required_gb: int):
     logging.info(f"Detected RAM: {total_gb:.2f} GB")
     if total_gb < required_gb:
         logging.error("Not enough RAM detected to run this program")
-        return 1
-    return 0
+        return False
+    return True

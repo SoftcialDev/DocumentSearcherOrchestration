@@ -281,8 +281,8 @@ def upload_embeddings(embeddings: list):
     for table in tables:
         records_to_insert[table] = {
             "query" : f"""
-                INSERT INTO public.{table} (id, chunk_id, content, content_hash, vector)
-                VALUES (%s, %s, %s, %s, %s)
+                INSERT INTO public.{table} (id, chunk_id, title, content, content_hash, vector)
+                VALUES (%s, %s, %s, %s, %s, %s)
             """,
             "records" : []
         }
@@ -297,6 +297,7 @@ def upload_embeddings(embeddings: list):
             records_to_insert[embedding["table"]]["records"].append((
                 embedding["itemId"],
                 chunk_id,
+                embedding["itemName"],
                 content,
                 content_hash,
                 emb.tolist()
@@ -361,7 +362,6 @@ def delete_embeddings(embeddings: list):
         logging.info(f"Deleted {len(group['records'])} records from {table}.")
         
 def vectorize_and_upload_files(files, table):
-    model = get_model()
     if not files:
         logging.info("No files detected, aborting...")
         return
@@ -378,10 +378,11 @@ def vectorize_and_upload_files(files, table):
                 chunks = conv.pdf_to_chunks(file["path"])
 
             if chunks is not None:
-                embedding = conv.chunks_to_embeddings(chunks, model)
+                embedding = conv.chunks_to_embeddings(chunks)
                 embeddings.append({
                     "table" : table,
                     "itemId" : file["itemId"],
+                    "itemName" : file["itemName"],
                     "embedding" : embedding
                 })
     logging.info("All files vectorized")

@@ -21,6 +21,7 @@ def create_topic(name: str) -> bool:
     query = f"""CREATE TABLE {pgscheme}.{name} (
         id text,
         chunk_id integer,
+        title text,
         content text,
         content_hash text,
         vector vector(768),

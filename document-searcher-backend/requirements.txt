@@ -2,6 +2,7 @@ numpy<2.0
 python-dotenv
 tika
 python-docx
+huggingface_hub>=0.24
 sentence-transformers
 psycopg[binary]
 fastapi
