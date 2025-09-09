@@ -1,20 +1,27 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "../providers/AuthProvider"; // adjust path if needed
+import poweredBySoftcial from "../imgs/powered_by_softcial.png"
+import appLogo from "../imgs/app_logo.png"
 
 export default function Header() {
   const { account, login, logout } = useAuth();
 
   const navStyle = {
-    padding: "10px",
+    padding: "20px",
     background: "#002A3E", // purple tone
     color: "white",
     display: "flex",
     justifyContent: account ? "space-between" : "flex-end",
     alignItems: "center",
   };
+  const welcomeStyle = {
+    padding: "10px",
+    background: "#002231ff", // purple tone
+    color: "white",
+  };
 
   const linkStyle = {
-    marginRight: "10px",
+    marginRight: "30px",
     color: "#ffffff", // light lavender
     textDecoration: "none",
   };
@@ -22,7 +29,7 @@ export default function Header() {
   if (!account) {
     return (
       <nav style={navStyle}>
-        <button
+        {/* <button
           style={{
             background: "#09CAC7",
             border: "none",
@@ -34,34 +41,38 @@ export default function Header() {
           onClick={login}
         >
           Log In
-        </button>
+        </button> */}
       </nav>
     );
   }
 
   return (
-    <nav style={navStyle}>
-      <div>
-        <Link to="/" style={linkStyle}>Home</Link>
-        <Link to="/chat" style={linkStyle}>Chat</Link>
-        <Link to="/topics" style={linkStyle}>Topics</Link>
-      </div>
-      <div>
-        <span style={{ marginRight: "10px" }}>{account.username}</span>
-        <button
-          style={{
-            background: "#09CAC7",
-            border: "none",
-            padding: "6px 12px",
-            borderRadius: "4px",
-            cursor: "pointer",
-            color: "#002A3E",
-          }}
-          onClick={logout}
-        >
-          Log Out
-        </button>
-      </div>
-    </nav>
+    <div>
+      <nav style={navStyle}>
+        <img src={appLogo} width={"150px"} alt="" />        
+        <div>
+          <Link to="/home" style={linkStyle}>Home</Link>
+          <Link to="/chat" style={linkStyle}>Chat</Link>
+          <Link to="/topics" style={linkStyle}>Topics</Link>
+          <button
+            style={{
+              background: "#09CAC7",
+              border: "none",
+              padding: "6px 12px",
+              borderRadius: "4px",
+              cursor: "pointer",
+              color: "#002A3E",
+            }}
+            onClick={logout}
+          >
+            Log Out
+          </button>
+        </div>
+        <img src={poweredBySoftcial} width={"150px"} alt="" />
+      </nav>
+      <div style={welcomeStyle}>
+        <p style={{ textAlign: "center", width: "100%" }}>Welcome, {account.username}!</p>
+      </div>      
+    </div>
   );
 }
