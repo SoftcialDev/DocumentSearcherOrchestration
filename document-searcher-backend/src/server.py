@@ -246,7 +246,7 @@ async def documents_seach(req: Request):
     query = req.query_params.get("query")
     topic = req.query_params.get("topic")
     format = req.query_params.get("pages", "json")
-    
+
     return search.document_search(query, topic, format)
 
 @app.get("/api/search/sinalevi")
@@ -263,4 +263,15 @@ async def web_scrapper_search(req: Request):
 
 def start_server():
     import uvicorn
-    uvicorn.run("serverapi:app", host="0.0.0.0", port=5000, reload=True)
+    uvicorn.run(
+        "server:app", 
+        host="0.0.0.0", 
+        port=5000, 
+        reload=True,
+        reload_dirs=[".", "modules"],
+        reload_includes=["*.py", "*.env"],
+        reload_excludes=["*.pyc", "node_modules/*"],
+    ) 
+
+if __name__ == "__main__":
+    start_server()
