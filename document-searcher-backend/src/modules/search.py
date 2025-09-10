@@ -1,10 +1,18 @@
 from modules.databases import PostgreSQLConnection
 from model_registry import get_model
+from modules.scrappers import SinaleviScrapper
+from datetime import datetime, timedelta, timezone
 import os
 
-def document_search(query_text: str, topic: str,  k: int = 5):
+def document_search(query_text: str, topic: str, format: str, limit: int = 5):
     # Loads the required varaibles
-    result = []
+    result = {
+        "source" : "DocumentSearcher",
+        "query" : query_text,
+        "limit" : k,
+        "timestamp" : datetime.now(timezone.utc).isoformat(),
+        "items" : []
+    }
     db = PostgreSQLConnection()
     model = get_model()
     q_emb = model.encode([query_text], normalize_embeddings=True)[0]
@@ -39,6 +47,7 @@ def document_search(query_text: str, topic: str,  k: int = 5):
         SELECT
             t.id,
             t.chunk_id,
+            t.title,
             t.content,
             t.content_hash,
             (t.vector <=> q.vec)  AS distance,
@@ -47,7 +56,7 @@ def document_search(query_text: str, topic: str,  k: int = 5):
         JOIN top_docs td USING (id)
         CROSS JOIN q
         ORDER BY td.min_distance, t.id, t.chunk_id;
-    """
+        """
 
     res = db.fetch_all(sql)
     if isinstance(res, dict) and "error" in res:
@@ -57,16 +66,54 @@ def document_search(query_text: str, topic: str,  k: int = 5):
     
     for idx, r in enumerate(rows, 1):
         content = (r.get("content") or "").strip()
-        title = next((ln.strip() for ln in content.splitlines() if ln.strip()), "")[:120]
+        title = (r.get("title") or "").strip()
         
-        result.append({
-            "id": idx,
-            "name": title,
-            "date": "",
-            "content": content,
-            "source": "Sinalevi"
-        })
+         # Look for an existing item with the same title
+        existing = next((item for item in result["items"] if item["name"] == title), None)
+
+        if existing:
+            existing["content"] += " " + content
+        else:
+            result["items"].append({
+                "id": idx,
+                "name": title,
+                "content": content,
+                "url": "www.example.com"
+            })
     return result
 
-def sinalevi_search():
-    pass
+def sinalevi_search(query_text: str, pages: int, format: str) -> str:
+    result = {
+        "source" : "DocumentSearcher",
+        "query" : query_text,
+        "limit" : pages,
+        "timestamp" : datetime.now(timezone.utc).isoformat(),
+        "items" : []
+    }
+
+    arguments = [
+        "--no-sandbox",
+        "--headless=new",
+        "--log-level=3",
+        "--silent-debugger-extension-api",
+        "--disable-dev-shm-usage",
+        "--disable-gpu",
+        "--disable-crash-reporter",
+        "--disable-infobars",
+        "--disable-notifications",
+        "--disable-features=Translate,BackForwardCache,UseChromeOSDirectVideoDecoder",
+        "--window-size=1365,768",
+        "--lang=es-CR",
+        "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123 Safari/537.36",
+        "--disable-blink-features=AutomationControlled",
+    ]
+
+    experimentals = {
+        "excludeSwitches": ["enable-automation", "enable-logging"],
+        "useAutomationExtension": False,
+    }
+
+    sinalevi = SinaleviScrapper(arguments, experimentals)
+    items = sinalevi.scrappe_website(query_text, pages)
+    result["items"] = items
+    return result

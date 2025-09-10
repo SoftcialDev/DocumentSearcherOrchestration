@@ -1,5 +1,6 @@
-output "fqdn" {
-  value = azurerm_postgresql_flexible_server.postgres_server.fqdn
+output "postgres_fqdn" {
+  value       = azurerm_postgresql_flexible_server.postgres_server.fqdn
+  description = "FQDN of the PostgreSQL Flexible Server"
 }
 
 output "server_name" {
@@ -17,11 +18,11 @@ output "admin_username" {
 # }
 
 output "database_name" {
-  value = azurerm_postgresql_flexible_database.postgres_database.name
+  value = azurerm_postgresql_flexible_server_database.postgres_database.name
 }
 
 # Ready-to-use connection string (SSL required by Flexible Server)
-output "connection_string" {
-  value     = "postgresql://${var.admin_username}:${var.admin_password}@${azurerm_postgresql_flexible_server.postgres_server.fqdn}:5432/${azurerm_postgresql_flexible_database.postgres_database.name}?sslmode=require"
-  sensitive = true
-}
+#output "connection_string" {
+#  value     = "postgresql://${var.admin_username}:${var.admin_password}@${azurerm_postgresql_flexible_server_database.postgres_server.fqdn}:5432/${azurerm_postgresql_flexible_server_database.postgres_database.name}?sslmode=require"
+#  sensitive = true
+#}

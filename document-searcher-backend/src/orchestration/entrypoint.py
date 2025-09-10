@@ -62,7 +62,11 @@ def run_in_processes(tasks: Iterable[Dict[str, Any]], max_workers: int = 3) -> N
 def vectorizer(schedule):
     pgsql = PostgreSQLConnection()
     query = f"SELECT * FROM public.sources WHERE schedule = '{schedule}'"
-    results = pgsql.fetch_all(query)["rows"]
+    results = pgsql.fetch_all(query)
+    if not results:
+        logging.error(f"Orchestration at {schedule} aborted...")
+        return
+    rows = results["rows"]
     tasks = [
         {
             "topic": r["topic"] if isinstance(r, dict) else r[0],
@@ -71,7 +75,7 @@ def vectorizer(schedule):
             "site":  r["site"]  if isinstance(r, dict) else r[3],
             "schedule": schedule,
         }
-        for r in results
+        for r in rows
     ]
     if tasks:
         logging.info(f"Starting orchestration with {len(tasks)} sources at {schedule}")

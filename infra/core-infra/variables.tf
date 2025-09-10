@@ -1,21 +1,19 @@
-########################################
-# Global Configuration (shared across modules)
-########################################
 variable "name_prefix" {
-  description = "Prefix used for naming all provisioned resources. Must comply with Azure naming rules."
+  description = "Short project prefix for resource names (alphanumeric, 3-12 chars)."
   type        = string
-  default     = "document-search"
+  default     = "docsearch01"
 }
 
 variable "region" {
-  description = "Azure region where all resources will be deployed, for example 'eastus'."
+  description = "Azure region for resources."
   type        = string
   default     = "eastus"
 }
 
-variable "database_url" {
-  description = "Database connection URL"
+variable "resource_group_name" {
+  description = "Name of the resource group to create."
   type        = string
+  default     = null
 }
 
 variable "tags" {
@@ -25,62 +23,29 @@ variable "tags" {
 }
 
 ########################################
-# Networking Module (May not be needed?)
+# Azure Container Registry (ACR) Module
 ########################################
-variable "vnet_ip" {
-  description = "Base IP address range of the Virtual Network, for example '10.26.0.0'."
+variable "acr_sku" {
+  description = "ACR SKU (Basic, Standard, Premium)."
   type        = string
-  default     = "10.26.0.0"
+  default     = "Standard"
 }
 
-variable "vnet_mask" {
-  description = "CIDR mask for the Virtual Network, for example '/16'."
-  type        = string
-  default     = "/16"
-}
-
-variable "subnet_mask" {
-  description = "CIDR mask for subnets within the VNet, for example '/20'."
-  type        = string
-  default     = "/20"
-}
-
-
-########################################
-# Azure Active Directory (AAD) Module
-########################################
-variable "aad_app_name" {
-  description = "Name of the Azure AD application."
-  type        = string
-}
-
-variable "aad_redirect_uris" {
-  description = "List of redirect URIs allowed for the Azure AD application."
-  type        = list(string)
-}
-
-variable "aad_desktop_redirect_uris" {
-  description = "List of redirect URIs for the SPA (e.g., http://localhost:5173, https://prod-domain/.../auth)"
-  type        = list(string)
-}
-
-variable "aad_logout_uris" {
-  description = "List of post-logout redirect URIs for the Azure AD application."
-  type        = list(string)
-}
-
-variable "aad_admins_group_members" {
-  description = "List of user principal names (UPNs) to add to the Admins group."
-  type        = list(string)
-}
-
-
-variable "aad_enable_directory_role_assignment" {
-  description = "Whether to assign directory roles (e.g., 'User Administrator') to the Admins group."
+variable "acr_admin_enabled" {
+  description = "Enable admin (username/password) for ACR."
   type        = bool
   default     = false
 }
 
+
+########################################
+# Static Web App (SWA) Module
+########################################
+variable "swa_sku_tier" {
+  description = "SKU tier for the Static Web App, e.g., 'Free' or 'Standard'."
+  type        = string
+  default     = "Free"
+}
 
 ########################################
 # PostgreSQL Module
@@ -88,11 +53,13 @@ variable "aad_enable_directory_role_assignment" {
 variable "postgres_admin_username" {
   description = "Administrator username for PostgreSQL Flexible Server."
   type        = string
+  default     = "Softcial"
 }
 
 variable "postgres_admin_password" {
   description = "Administrator password for PostgreSQL Flexible Server."
   type        = string
+  default     = "Softcial.2025"
   sensitive   = true
 }
 
@@ -105,7 +72,7 @@ variable "postgres_version" {
 variable "postgres_sku_name" {
   description = "SKU name for PostgreSQL Flexible Server, for example 'Standard_D2s_v3'."
   type        = string
-  default     = "Standard_D2s_v3"
+  default     = "B_Standard_B1ms"
 }
 
 variable "postgres_storage_mb" {
@@ -132,39 +99,14 @@ variable "postgres_allowed_ips" {
   default     = []
 }
 
-########################################
-# Azure Container Registry (ACR)
-########################################
-variable "acr_sku" {
-  description = "ACR SKU: Basic, Standard, Premium."
-  type        = string
-  default     = "Basic"
+#
+# Azure connection
+#
+variable "subscription_id" { 
+  type = string 
+  default = "af90c465-cc8e-46d8-a0eb-ee471b4313a3"
 }
-
-variable "acr_admin_enabled" {
-  description = "Enable ACR admin account (dev convenience; disable for prod with Managed Identity)."
-  type        = bool
-  default     = true
-}
-
-
-########################################
-# Function App Module
-########################################
-variable "function_plan_sku_tier" {
-  description = "App Service Plan SKU tier for Function App: 'Dynamic' for Consumption or 'ElasticPremium' for Premium."
-  type        = string
-  default     = "Dynamic"
-}
-
-variable "function_plan_sku_size" {
-  description = "App Service Plan SKU size for Function App: 'Y1' for Consumption or 'EP1' for Premium."
-  type        = string
-  default     = "Y1"
-}
-
-variable "function_vnet_subnet_id" {
-  description = "Resource ID of the subnet for Function App VNet Integration, if needed for private resource access."
-  type        = string
-  default     = ""
+variable "tenant_id" { 
+  type = string 
+  default = "a080ad22-43aa-4696-b40b-9b68b702c9f3"
 }

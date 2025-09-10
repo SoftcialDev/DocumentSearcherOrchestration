@@ -50,7 +50,7 @@ resource "azurerm_postgresql_flexible_server_firewall_rule" "postgres_firewall" 
 }
 
 # Create a database on the server (correct resource type)
-resource "azurerm_postgresql_flexible_database" "postgres_database" {
+resource "azurerm_postgresql_flexible_server_database" "postgres_database" {
   name      = var.db_name
   server_id = azurerm_postgresql_flexible_server.postgres_server.id
   charset   = "UTF8"

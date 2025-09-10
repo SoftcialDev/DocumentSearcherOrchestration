@@ -48,20 +48,14 @@ class SinaleviScrapper(Scrapper):
         super().__init__(arguments, experimentals)
 
     def scrappe_website(self, query: str, pages: int):
-        result = {
-            "source" : "DocumentSearcher",
-            "query" : query,
-            "limit" : pages * 10, # Each page contains 10 results
-            "timestamp" : datetime.now(timezone.utc).isoformat(),
-            "items" : []
-        }
+        items = []
         try:
             main_url = "https://www.pgrweb.go.cr/SCIJ/main.aspx"
             main_collected = self.request_url(main_url, 3)
 
             if not main_collected:
                 logging.error("Could not fetch main website, aborting...")
-                return result
+                return items
             
             # Attempts to load the query and do the search
             text_input = self.driver.find_element(By.ID, '_ctl0__ctl0_ContentPlaceHolder1_txtConsulta')
@@ -109,7 +103,7 @@ class SinaleviScrapper(Scrapper):
 
                         title = re.sub(r'[\\/:*?"<>|]+', "_", title).strip()[:150] or "documento"
 
-                        result["items"].append({
+                        items.append({
                             "id": current_link,
                             "name": title,
                             "content": body,
@@ -122,7 +116,7 @@ class SinaleviScrapper(Scrapper):
         except Exception as e:
             print(f"Error trying to scrappe website, aborting...")
         
-        return result
+        return items
     
 class NexusScrapper(Scrapper):
 

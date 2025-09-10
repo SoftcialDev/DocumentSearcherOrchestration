@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 import api.sources as api_sources
 import api.topics as api_topics
 import modules.sources as sources
+import modules.search as search
 import re, logging
 
 load_dotenv()
@@ -245,11 +246,8 @@ async def documents_seach(req: Request):
     query = req.query_params.get("query")
     topic = req.query_params.get("topic")
     format = req.query_params.get("pages", "json")
-    return sources.get_document_search(query, topic, format)
-
-@app.get("/api/search/nexuspj")
-async def nexus_scrapper_search(req: Request):
-    pass
+    
+    return search.document_search(query, topic, format)
 
 @app.get("/api/search/sinalevi")
 async def sinalevi_scrapper_search(req: Request):
@@ -257,7 +255,7 @@ async def sinalevi_scrapper_search(req: Request):
     pages = req.query_params.get("pages")
     format = req.query_params.get("format", "json")
     
-    return sources.get_sinalevi_result(query, int(pages), format)
+    return search.sinalevi_search(query, int(pages), format)
 
 @app.get("/api/search/web")
 async def web_scrapper_search(req: Request):
