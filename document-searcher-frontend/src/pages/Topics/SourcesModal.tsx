@@ -51,7 +51,7 @@ export default function SourcesModal({ topicName }: Props) {
     if (!confirm) return;
     const { name, id } = confirm;
     try {
-      const res = await fetch("http://localhost:5000/remove-source", {
+      const res = await fetch("/api/remove-source", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -105,7 +105,7 @@ export default function SourcesModal({ topicName }: Props) {
       });
     }
 
-    fetch(`http://localhost:5000/list-sources?topic=${encodeURIComponent(topicName)}`)
+    fetch(`/api/list-sources?topic=${encodeURIComponent(topicName)}`)
       .then((r) => (r.ok ? r.json() : Promise.reject(r.statusText)))
       .then(setSources)
       .catch((e) => setError(String(e)))
@@ -124,7 +124,7 @@ export default function SourcesModal({ topicName }: Props) {
     );
 
     try {
-      const res = await fetch("http://localhost:5000/update-source", {
+      const res = await fetch("/api/update-source", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

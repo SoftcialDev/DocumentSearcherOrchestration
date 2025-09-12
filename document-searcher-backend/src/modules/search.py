@@ -9,7 +9,7 @@ def document_search(query_text: str, topic: str, format: str, limit: int = 5):
     result = {
         "source" : "DocumentSearcher",
         "query" : query_text,
-        "limit" : k,
+        "limit" : limit,
         "timestamp" : datetime.now(timezone.utc).isoformat(),
         "items" : []
     }
@@ -28,7 +28,7 @@ def document_search(query_text: str, topic: str, format: str, limit: int = 5):
     min_similarity = 0.50 # The higher it is the more strict it will be, max is 1
     max_distance = 1.0 - min_similarity
 
-    k = int(k)
+    limit = int(limit)
     sql = f"""
         WITH q(vec) AS (VALUES ('{vec_lit}'::vector)),
         doc_hits AS (
@@ -42,7 +42,7 @@ def document_search(query_text: str, topic: str, format: str, limit: int = 5):
             SELECT id, min_distance
             FROM doc_hits
             ORDER BY min_distance
-            LIMIT {k}
+            LIMIT {limit}
         )
         SELECT
             t.id,

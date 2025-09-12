@@ -17,9 +17,9 @@ if __name__ == "__main__":
     warnings = 0
     
     # Checks hardware
-    if not ram_checkup(8) :
-        logging.critical(f"Unable to start process, errors detected in RAM checkup")
-        exit()
+    #if not ram_checkup(8) :
+    #    logging.critical(f"Unable to start process, errors detected in RAM checkup")
+    #    exit()
 
     # Check variables
     env_error, env_warning = env_checkup()

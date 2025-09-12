@@ -19,7 +19,7 @@ export default function Topics() {
 
   /* ---------- fetch topics list ---------- */
   useEffect(() => {
-    fetch("http://localhost:5000/list-topics")
+    fetch("/api/list-topics")
       .then((r) => r.json())
       .then(setTopics)
       .catch((err) => console.error("Error fetching topics:", err));
@@ -35,7 +35,7 @@ export default function Topics() {
     if (!confirmTopic) return;
 
     try {
-      const res = await fetch("http://localhost:5000/delete-topic", {
+      const res = await fetch("/api/delete-topic", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ topic_name: confirmTopic }),

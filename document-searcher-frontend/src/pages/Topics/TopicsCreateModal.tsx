@@ -21,7 +21,7 @@ export default function TopicCreateModal({ onCreated }: Props) {
     if (!text.trim()) return alert("Please enter a topic name");
 
     try {
-      const res  = await fetch("http://localhost:5000/create-topic", {
+      const res  = await fetch("/api/create-topic", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ topic_name: text }),
