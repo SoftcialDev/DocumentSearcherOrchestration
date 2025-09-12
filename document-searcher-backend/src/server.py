@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, APIRouter, Query
 from fastapi.responses import JSONResponse
 from fastapi import Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,28 +11,20 @@ import re, logging
 
 load_dotenv()
 
-app = FastAPI()
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5000", "http://127.0.0.1:3000", "https://documentsearcher.softcial.com"],  # or ["*"]
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+api = APIRouter(prefix="/api")
 
 RESERVED_TABLES = ["sources", "topics", "manifests"]
 
 ####################
 # Topics endpoints #
 ####################
-@app.get("/list-topics")
+@api.get("/list-topics")
 async def list_topics():
     raw = api_topics.list_topics()
     return JSONResponse(content=raw, status_code=200)
 
 
-@app.post("/create-topic")
+@api.post("/create-topic")
 async def create_topic(req: Request):
     try:
         data = await req.json()
@@ -62,7 +54,7 @@ async def create_topic(req: Request):
         )
     
 
-@app.patch("/rename-topic")
+@api.patch("/rename-topic")
 async def rename_topic(req: Request):
     try:
         data = await req.json()
@@ -95,7 +87,7 @@ async def rename_topic(req: Request):
         )
     
 
-@app.delete("/delete-topic")
+@api.delete("/delete-topic")
 async def delete_topic(req: Request):
     try:
         data = await req.json()
@@ -122,13 +114,13 @@ async def delete_topic(req: Request):
 #####################
 # Sources endpoints #
 #####################
-@app.get("/list-sources")
+@api.get("/list-sources")
 async def list_sources(req: Request):
     topic = req.query_params.get("topic")
     return api_sources.list_sources(topic)
 
 
-@app.post("/add-source")
+@api.post("/add-source")
 async def add_source(req: Request):
     try:
         data = await req.json()
@@ -182,7 +174,7 @@ async def add_source(req: Request):
 
     return {"status": "success", "message": f"{len(values)} source(s) added/kept"}
 
-@app.delete("/remove-source")
+@api.delete("/remove-source")
 async def remove_source(req: Request):
     try:
         data = await req.json()
@@ -215,7 +207,7 @@ async def remove_source(req: Request):
         return JSONResponse({"status": "error", "message": ""}, status_code=500)
     
 
-@app.patch("/update-source")
+@api.patch("/update-source")
 async def update_source(req: Request):
     try:
         data = await req.json()
@@ -241,7 +233,7 @@ async def update_source(req: Request):
 ###########################
 # Data Sources collection #
 ###########################
-@app.get("/api/search/documents")
+@api.get("/search/documents")
 async def documents_seach(req: Request):
     query = req.query_params.get("query")
     topic = req.query_params.get("topic")
@@ -249,7 +241,7 @@ async def documents_seach(req: Request):
 
     return search.document_search(query, topic, format)
 
-@app.get("/api/search/sinalevi")
+@api.get("/search/sinalevi")
 async def sinalevi_scrapper_search(req: Request):
     query = req.query_params.get("query")
     pages = req.query_params.get("pages")
@@ -257,9 +249,20 @@ async def sinalevi_scrapper_search(req: Request):
     
     return search.sinalevi_search(query, int(pages), format)
 
-@app.get("/api/search/web")
+@api.get("/search/web")
 async def web_scrapper_search(req: Request):
     pass
+
+app = FastAPI()
+app.include_router(api)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://localhost:5000", "http://127.0.0.1:3000", "https://documentsearcher.softcial.com"],  # or ["*"]
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 def start_server():
     import uvicorn
