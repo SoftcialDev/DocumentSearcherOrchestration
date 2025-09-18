@@ -5,18 +5,11 @@ from datetime import datetime, timedelta, timezone
 import os
 
 def document_search(query_text: str, topic: str, format: str, limit: int = 5):
-    # Loads the required varaibles
-    result = {
-        "source" : "DocumentSearcher",
-        "query" : query_text,
-        "limit" : limit,
-        "timestamp" : datetime.now(timezone.utc).isoformat(),
-        "items" : []
-    }
     db = PostgreSQLConnection()
     model = get_model()
     q_emb = model.encode([query_text], normalize_embeddings=True)[0]
     pgscheme = os.getenv("PGSCHEME")
+    items = []
 
     # Build pgvector literal (compact & safe)
     def _fmt(x: float) -> str:
@@ -69,18 +62,17 @@ def document_search(query_text: str, topic: str, format: str, limit: int = 5):
         title = (r.get("title") or "").strip()
         
          # Look for an existing item with the same title
-        existing = next((item for item in result["items"] if item["name"] == title), None)
+        existing = next((item for item in items if item["name"] == title), None)
 
         if existing:
             existing["content"] += " " + content
         else:
-            result["items"].append({
+            items.append({
                 "id": idx,
                 "name": title,
-                "content": content,
-                "url": "www.example.com"
+                "content": content
             })
-    return result
+    return items
 
 def sinalevi_search(query_text: str, pages: int, format: str) -> str:
     result = {

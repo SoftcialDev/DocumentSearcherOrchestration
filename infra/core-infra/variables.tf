@@ -22,29 +22,22 @@ variable "tags" {
   default     = {}
 }
 
-########################################
-# Azure Container Registry (ACR) Module
-########################################
-variable "acr_sku" {
-  description = "ACR SKU (Basic, Standard, Premium)."
-  type        = string
-  default     = "Standard"
+#######################
+# Azure Container App #
+#######################
+variable "acr_login_server" {
+  description = "value"
+  type = string
 }
 
-variable "acr_admin_enabled" {
-  description = "Enable admin (username/password) for ACR."
-  type        = bool
-  default     = false
+variable "acr_admin_username" {
+  description = "value"
+  type = string
 }
 
-
-########################################
-# Static Web App (SWA) Module
-########################################
-variable "swa_sku_tier" {
-  description = "SKU tier for the Static Web App, e.g., 'Free' or 'Standard'."
-  type        = string
-  default     = "Free"
+variable "acr_admin_password" {
+  description = "value"
+  type = string
 }
 
 ########################################

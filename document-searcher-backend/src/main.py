@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from orchestration.entrypoint import start_orchestration
 from sentence_transformers import SentenceTransformer
 from model_registry import set_model
-import logging, uvicorn
+import logging, uvicorn, time
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -58,4 +58,4 @@ if __name__ == "__main__":
         reload_dirs=[".", "modules"],
         reload_includes=["*.py", "*.env"],
         reload_excludes=["*.pyc", "node_modules/*"],
-    ) 
+    )

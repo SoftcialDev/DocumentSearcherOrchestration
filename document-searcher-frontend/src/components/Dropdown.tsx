@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 interface Item {
   name: string;
+  display: string;
 }
 
 interface DropdownProps {
@@ -47,7 +48,7 @@ export default function Dropdown({
       <select id="dropdown" value={selected} onChange={handleChange} style={{color: "#ffffff", background: "#024A59", borderRadius: "5px"}}>
         {items.map((item, index) => (
           <option key={index} value={item.name}>
-            {item.name}
+            {item.display}
           </option>
         ))}
       </select>

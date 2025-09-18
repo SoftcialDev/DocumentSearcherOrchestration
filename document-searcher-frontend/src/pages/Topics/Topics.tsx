@@ -5,6 +5,7 @@ import TopicCreateModal from "./TopicsCreateModal";
 import SourcesModal from "./SourcesModal";
 import poweredBySoftcial from "../../imgs/powered_by_softcial.png"
 import appLogo from "../../imgs/app_logo.png"
+import { useAlerts } from "../../providers/AlertsProvider"; 
 
 
 interface Topic { name: string }
@@ -15,7 +16,10 @@ export default function Topics() {
   const [refreshKey, setKey] = useState(0);
 
   /* confirmation modal state */
-  const [confirmTopic, setConfirmTopic] = useState<string | null>(null);
+  const [deleteTopic, setDeleteTopic] = useState<string | null>(null);
+  const [refreshTopic, setRefreshTopic] = useState<string | null>(null);
+
+  const { push } = useAlerts();
 
   /* ---------- fetch topics list ---------- */
   useEffect(() => {
@@ -28,17 +32,18 @@ export default function Topics() {
   const refresh = () => setKey((k) => k + 1);
 
   /* ---------- open confirm dialog ---------- */
-  const askDelete = (name: string) => setConfirmTopic(name);
+  const askDelete = (name: string) => setDeleteTopic(name);
+  const askRefresh = (name: string) => setRefreshTopic(name);
 
   /* ---------- accept deletion ---------- */
   const confirmDelete = async () => {
-    if (!confirmTopic) return;
+    if (!deleteTopic) return;
 
     try {
       const res = await fetch("/api/delete-topic", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic_name: confirmTopic }),
+        body: JSON.stringify({ topic_name: deleteTopic }),
       });
       const data = await res.json();
       if (data.status === "success") refresh();
@@ -46,12 +51,43 @@ export default function Topics() {
     } catch {
       alert("Error: Unable to delete topic");
     } finally {
-      setConfirmTopic(null); // close modal
+      setDeleteTopic(null); // close modal
     }
   };
 
-  /* ---------- cancel deletion ---------- */
-  const cancelDelete = () => setConfirmTopic(null);
+  const confirmRefresh = async () => {
+    if (!refreshTopic) return;
+
+    try {
+      const res = await fetch("/api/refresh-topic", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic: refreshTopic }),
+      });
+      const data = await res.json();
+      if (data.status === "success"){
+        push({
+          message: "Success: Topic refresh started",
+          variant: "success",
+          duration: 5000,
+        })
+      }else{
+        push({
+          message: "Error: Unable to refresh topic",
+          variant: "error",
+          duration: 5000,
+        })
+      }
+    } catch {
+      alert("Error: Unable to delete topic");
+    } finally {
+      setRefreshTopic(null); // close modal
+    }
+  };
+
+  /* ---------- cancel actions ---------- */
+  const cancelDelete = () => setDeleteTopic(null);
+  const cancelRefresh = () => setRefreshTopic(null);
 
   return (
     <div className="min-h-screen">
@@ -85,6 +121,12 @@ export default function Topics() {
             <span style={{color: "#ffffff"}} className="font-medium">{t.name}</span>
             <div className="flex gap-2">
               <Button
+                text="Refresh"
+                onClick={() => askRefresh(t.name)}
+                type="CANCEL"
+                icon="refresh"
+              />
+              <Button
                 text="DELETE"
                 onClick={() => askDelete(t.name)}
                 type="CANCEL"
@@ -98,14 +140,24 @@ export default function Topics() {
         ))}
       </div>
 
-      {/* confirmation modal */}
-      {confirmTopic && (
+      {/* confirmation modals */}
+      {deleteTopic && (
         <ConfirmModal
           isOpen={true}
-          title={`Delete topic '${confirmTopic}'?`}
+          title={`Delete topic '${deleteTopic}'?`}
           message="This action cannot be undone."
           onAccept={confirmDelete}
           onCancel={cancelDelete}
+          className="max-w-md bg-purple-100 text-purple-900"
+        />
+      )}
+      {refreshTopic && (
+        <ConfirmModal
+          isOpen={true}
+          title={`Refresh topic '${refreshTopic}'?`}
+          message="You will not be able to refresh more topics for the duration"
+          onAccept={confirmRefresh}
+          onCancel={cancelRefresh}
           className="max-w-md bg-purple-100 text-purple-900"
         />
       )}

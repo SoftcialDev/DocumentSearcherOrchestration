@@ -3,11 +3,13 @@ from fastapi.responses import JSONResponse
 from fastapi import Request
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
+from orchestration.entrypoint import manual_refresh
+from datetime import datetime, timedelta, timezone
 import api.sources as api_sources
 import api.topics as api_topics
 import modules.sources as sources
 import modules.search as search
-import re, logging
+import re, logging, threading
 
 load_dotenv()
 
@@ -36,7 +38,9 @@ async def create_topic(req: Request):
     if not topic_name:
         return JSONResponse({"status": "error", "message": f"Missing or blank parameter 'topic_name'"},status_code=400,)
 
-    topic_name = re.sub(r'[^a-z0-9_]', '_', topic_name)
+    topic_name = topic_name.lower()
+    topic_name = topic_name.replace(" ", "_")
+    topic_name = re.sub(r'[^a-z0-9_]', '', topic_name)
 
     if topic_name.lower() in RESERVED_TABLES:
         return JSONResponse(
@@ -230,16 +234,43 @@ async def update_source(req: Request):
     else:
         return JSONResponse({"status": "error", "message": "Could not update source"}, status_code=500)
 
+@api.patch("/refresh-topic")
+async def refresh_source(req: Request):
+    try:
+        data = await req.json()
+    except Exception:
+        return JSONResponse({"status": "error", "message": "Invalid JSON body"}, status_code=400)
+
+    topic = data.get("topic")
+
+    t = threading.Thread(target=manual_refresh, args=(topic,), daemon=True)
+    t.start()
+
+    return JSONResponse({"status": "success", "message": "Topic refresh started, please allow some minutes for it to finish"})
+
 ###########################
 # Data Sources collection #
 ###########################
 @api.get("/search/documents")
 async def documents_seach(req: Request):
     query = req.query_params.get("query")
-    topic = req.query_params.get("topic")
+    topic_list = req.query_params.get("topic")
     format = req.query_params.get("pages", "json")
 
-    return search.document_search(query, topic, format)
+    topics = topic_list.split(",")
+
+    result = {
+        "source" : "DocumentSearcher",
+        "query" : query,
+        "limit" : 5,
+        "timestamp" : datetime.now(timezone.utc).isoformat(),
+        "items" : []
+    }
+
+    for topic in topics:
+        result["items"].extend(search.document_search(query, topic, format))
+
+    return result
 
 @api.get("/search/sinalevi")
 async def sinalevi_scrapper_search(req: Request):
@@ -252,6 +283,7 @@ async def sinalevi_scrapper_search(req: Request):
 @api.get("/search/web")
 async def web_scrapper_search(req: Request):
     pass
+
 
 app = FastAPI()
 app.include_router(api)

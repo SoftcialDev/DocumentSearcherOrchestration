@@ -1,7 +1,10 @@
 import Dropdown from "../../components/Dropdown";
 import Button   from "../../components/Button";
 
-interface Item   { name: string }
+interface Item {
+  name: string;
+  display: string;
+}
 interface Source {
   id: string;
   name: string;
@@ -69,12 +72,6 @@ export default function SourcesTable({
                     onClick={() => onRemove(s.name, s.id)}
                     type="CANCEL"
                     icon="remove"
-                  />
-                  <Button
-                    text="Refresh"
-                    onClick={() => console.log("REFRESH")}
-                    type="CANCEL"
-                    icon="refresh"
                   />
                 </div>
               </div>

@@ -34,12 +34,12 @@ module "container_app" {
   resource_group_name = azurerm_resource_group.main-rg.name
 
   # Pull from ACR created by your ACR module
-  registry_server   = module.container_registry.login_server
-  registry_username = module.container_registry.admin_username
-  registry_password = module.container_registry.admin_password
+  registry_server   = var.acr_login_server
+  registry_username = var.acr_admin_username
+  registry_password = var.acr_admin_password
 
   # Use your existing all-in-one image + serving port
-  image       = "${module.container_registry.login_server}/documentsearcher:latest"
+  image       = "${var.acr_login_server}/documentsearcher:latest"
   target_port = 3000  # <-- change if your container listens on another port
 
   # Optional: runtime sizing

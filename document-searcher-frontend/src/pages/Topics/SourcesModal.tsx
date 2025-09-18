@@ -18,7 +18,10 @@ interface Source {
   schedule: string;
 }
 
-interface Item { name: string }
+interface Item {
+  name: string;
+  display: string;
+}
 
 export default function SourcesModal({ topicName }: Props) {
   const [isOpen, setIsOpen]   = useState(false);
@@ -35,9 +38,15 @@ export default function SourcesModal({ topicName }: Props) {
   const hours: Item[] = Array.from({ length: 48 }, (_, i) => {
     const hour = Math.floor(i / 2);
     const minute = i % 2 ? 30 : 0;
-    return { name: String(hour * 100 + minute) };
-  });
 
+    // value without colon (same as before)
+    const value = String(hour * 100 + minute);
+
+    // pretty label  -> e.g. "1:00", "12:30", "18:00"
+    const display = `${hour}:${minute.toString().padStart(2, "0")}`;
+
+    return { name: value, display };
+  });
   const open  = () => setIsOpen(true);
   const close = () => { setIsOpen(false); setShowMenu(false); };
 
@@ -157,18 +166,29 @@ export default function SourcesModal({ topicName }: Props) {
       <Button text="Sources" onClick={open} type="ACCEPT"  icon="sources"/>
 
       <Modal isOpen={isOpen} onClose={close} className="max-w-4xl">
-        <div style={{display: "flex", alignItems: "center"}}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M18.8213 3.17773C19.5159 3.49128 20 4.18841 20 5V21C20 22.1046 19.1046 23 18 23H8C7.18841 23 6.49128 22.5159 6.17773 21.8213C6.42879 21.9348 6.70656 22 7 22H17C18.1046 22 19 21.1046 19 20V4C19 3.70656 18.9348 3.42879 18.8213 3.17773Z" fill="white"/>
-          <path d="M12 11.5C12.2761 11.5 12.5 11.7239 12.5 12C12.5 12.2761 12.2761 12.5 12 12.5H8C7.72386 12.5 7.5 12.2761 7.5 12C7.5 11.7239 7.72386 11.5 8 11.5H12Z" fill="white"/>
-          <path d="M16 8.5C16.2761 8.5 16.5 8.72386 16.5 9C16.5 9.27614 16.2761 9.5 16 9.5H8C7.72386 9.5 7.5 9.27614 7.5 9C7.5 8.72386 7.72386 8.5 8 8.5H16Z" fill="white"/>
-          <path d="M16 5.5C16.2761 5.5 16.5 5.72386 16.5 6C16.5 6.27614 16.2761 6.5 16 6.5H8C7.72386 6.5 7.5 6.27614 7.5 6C7.5 5.72386 7.72386 5.5 8 5.5H16Z" fill="white"/>
-          <path fill-rule="evenodd" clip-rule="evenodd" d="M16 1C17.1046 1 18 1.89543 18 3V19C18 20.1046 17.1046 21 16 21H6C4.89543 21 4 20.1046 4 19V3C4 1.89543 4.89543 1 6 1H16ZM7 10.5C6.72386 10.5 6.5 10.7239 6.5 11C6.5 11.2761 6.72386 11.5 7 11.5H11C11.2761 11.5 11.5 11.2761 11.5 11C11.5 10.7239 11.2761 10.5 11 10.5H7ZM7 7.5C6.72386 7.5 6.5 7.72386 6.5 8C6.5 8.27614 6.72386 8.5 7 8.5H15C15.2761 8.5 15.5 8.27614 15.5 8C15.5 7.72386 15.2761 7.5 15 7.5H7ZM7 4.5C6.72386 4.5 6.5 4.72386 6.5 5C6.5 5.27614 6.72386 5.5 7 5.5H15C15.2761 5.5 15.5 5.27614 15.5 5C15.5 4.72386 15.2761 4.5 15 4.5H7Z" fill="white"/>
-        </svg>
+        <div style={{display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                  xmlns="http://www.w3.org/2000/svg">
+                <path d="M18.8213 3.17773C19.5159 3.49128 20 4.18841 20 5V21C20 22.1046 19.1046 23 18 23H8C7.18841 23 6.49128 22.5159 6.17773 21.8213C6.42879 21.9348 6.70656 22 7 22H17C18.1046 22 19 21.1046 19 20V4C19 3.70656 18.9348 3.42879 18.8213 3.17773Z" fill="white"/>
+                <path d="M12 11.5C12.2761 11.5 12.5 11.7239 12.5 12C12.5 12.2761 12.2761 12.5 12 12.5H8C7.72386 12.5 7.5 12.2761 7.5 12C7.5 11.7239 7.72386 11.5 8 11.5H12Z" fill="white"/>
+                <path d="M16 8.5C16.2761 8.5 16.5 8.72386 16.5 9C16.5 9.27614 16.2761 9.5 16 9.5H8C7.72386 9.5 7.5 9.27614 7.5 9C7.5 8.72386 7.72386 8.5 8 8.5H16Z" fill="white"/>
+                <path d="M16 5.5C16.2761 5.5 16.5 5.72386 16.5 6C16.5 6.27614 16.2761 6.5 16 6.5H8C7.72386 6.5 7.5 6.27614 7.5 6C7.5 5.72386 7.72386 5.5 8 5.5H16Z" fill="white"/>
+                <path fillRule="evenodd" clipRule="evenodd" d="M16 1C17.1046 1 18 1.89543 18 3V19C18 20.1046 17.1046 21 16 21H6C4.89543 21 4 20.1046 4 19V3C4 1.89543 4.89543 1 6 1H16ZM7 10.5C6.72386 10.5 6.5 10.7239 6.5 11C6.5 11.2761 6.72386 11.5 7 11.5H11C11.2761 11.5 11.5 11.2761 11.5 11C11.5 10.7239 11.2761 10.5 11 10.5H7ZM7 7.5C6.72386 7.5 6.5 7.72386 6.5 8C6.5 8.27614 6.72386 8.5 7 8.5H15C15.2761 8.5 15.5 8.27614 15.5 8C15.5 7.72386 15.2761 7.5 15 7.5H7ZM7 4.5C6.72386 4.5 6.5 4.72386 6.5 5C6.5 5.27614 6.72386 5.5 7 5.5H15C15.2761 5.5 15.5 5.27614 15.5 5C15.5 4.72386 15.2761 4.5 15 4.5H7Z" fill="white"/>
+              </svg>
 
-        <h3 className="text-xl font-semibold mb-4" style={{margin: 0, paddingLeft: "5px"}}>
-          Sources - {topicName}
-        </h3>
+              <h3 className="text-xl font-semibold mb-4"
+                  style={{ margin: 0, paddingLeft: "5px" }}>
+                Sources - {topicName}
+              </h3>
+            </div>
+
+          <Button
+            icon="none"
+            onClick={close}
+            text="X"
+            type="CANCEL"
+          />
         </div>
 
         <div className="relative mb-4 flex justify-end">

@@ -1,8 +1,6 @@
 from modules.databases import PostgreSQLConnection
-from sentence_transformers import SentenceTransformer
-from modules import authenticators
 from modules import sequences
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from multiprocessing import Process, Queue
 from typing import Any, Dict, Iterable
@@ -83,19 +81,34 @@ def vectorizer(schedule):
     else:
         logging.info(f"No topics scheduled at {schedule}")
 
-def run_vectorizer(minutes, func):
+def run_vectorizer(func):
     def worker():
         global VECTORIZER_FLAG
+        tz = ZoneInfo("America/Costa_Rica")
         while VECTORIZER_FLAG:
             try:
-                tz_name="America/Costa_Rica"
-                tz = ZoneInfo(tz_name)
                 now = datetime.now(tz)
+
+                # round up to the next 00 or 30 minute mark
+                minute_block = 0 if now.minute < 30 else 30
+                # next target is either the current hour’s :30 or the next hour’s :00
+                if minute_block == 0:
+                    next_run = now.replace(minute=30, second=0, microsecond=0)
+                else:
+                    next_run = (now + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
+
+                # compute schedule string for *this* run (based on current clock)
                 schedule = str(now.hour * 100 + (30 if now.minute >= 30 else 0))
                 func(schedule)
+
             except Exception:
                 logging.exception("Background task raised an exception")
-            time.sleep(minutes * 60)
+
+            # sleep until the next boundary
+            sleep_seconds = (next_run - datetime.now(tz)).total_seconds()
+            logging.info(f"Waiting {sleep_seconds} for next iteration")
+            if sleep_seconds > 0:
+                time.sleep(sleep_seconds)
 
     t = threading.Thread(target=worker, daemon=True)
     t.start()
@@ -104,9 +117,23 @@ def switch_vectorizer(status: bool):
     global VECTORIZER_FLAG
     VECTORIZER_FLAG = status
 
+def manual_refresh(topic_name):
+    logging.info(f"Starting manual refresh of topic {topic_name}")
+    pgsql = PostgreSQLConnection()
+    query = f"""
+        SELECT id
+        FROM public.sources
+        WHERE topic = '{topic_name}'
+    """
+    results = pgsql.fetch_all(query)
+    rows = results["rows"]
+    for r in rows:
+        composite = r["id"] if isinstance(r, dict) else r[0]
+        sequences.start_sharepoint_sequence(composite, topic_name)
 
 ##############
 # Entrypoint #
 ##############
 def start_orchestration():
-    run_vectorizer(30, vectorizer)
+    run_vectorizer(vectorizer)
+    
