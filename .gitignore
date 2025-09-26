@@ -16,6 +16,8 @@ override.tf.json
 *_override.tf
 *_override.tf.json
 secrets.auto.tfvars
+*.tfvars
 
 # General
 archived/
+build/

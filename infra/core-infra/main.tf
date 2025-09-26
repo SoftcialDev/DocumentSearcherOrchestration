@@ -19,13 +19,14 @@ module "network" {
   resource_group  = azurerm_resource_group.main-rg.name
 }
 
-#module "container_registry" {
-#  source              = "./modules/acr"
-#  name                = var.name_prefix
-#  resource_group      = azurerm_resource_group.main-rg.name
-#  location            = "eastus2"
-#  sku                 = var.acr_sku
-#}
+# Call the AAD app module
+module "aad_app" {
+  source        = "./modules/aad_app"
+  display_name  = var.app_display_name
+  redirect_uris = var.redirect_uris
+  logout_url    = var.logout_url
+}
+
 
 module "container_app" {
   source              = "./modules/container-app"
@@ -39,8 +40,8 @@ module "container_app" {
   registry_password = var.acr_admin_password
 
   # Use your existing all-in-one image + serving port
-  image       = "${var.acr_login_server}/documentsearcher:latest"
-  target_port = 3000  # <-- change if your container listens on another port
+  image       = "docsearchacr.azurecr.io/documentsearcher:latest"
+  target_port = 3000 
 
   # Optional: runtime sizing
   cpu    = 2.0

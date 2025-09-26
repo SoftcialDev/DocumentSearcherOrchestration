@@ -22,10 +22,18 @@ def add_sources(values: list):
 
 def remove_source(topic_name: str, source_id: str):
     pgsql = databases.PostgreSQLConnection()
-    query = f"""
+    item_id = source_id.split(",", 2)[1].strip() if "," in source_id else source_id.strip()
+    query_sources = f"""
         DELETE FROM {PGSCHEME}.sources WHERE topic = '{topic_name}' AND id = '{source_id}'
     """
-    return pgsql.execute_one(query)
+    result_sources = pgsql.execute_one(query_sources)
+
+    query_vectors = f"""
+        DELETE FROM {PGSCHEME}.{topic_name} WHERE id = '{source_id}'
+    """
+    result_vectors = pgsql.execute_one(query_vectors)
+
+    return result_sources and result_vectors
 
 def update_source(topic: str, id: str, schedule: str):
     pgsql = databases.PostgreSQLConnection()

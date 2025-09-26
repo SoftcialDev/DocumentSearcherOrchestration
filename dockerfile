@@ -1,5 +1,3 @@
-# Single image for backend (Python) + frontend (Node 20) running together
-
 FROM python:3.10-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -15,8 +13,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
  && rm -rf /var/lib/apt/lists/*
 
-# ---------- Node.js 20 (for frontend dev server) ----------
-# Use NodeSource repo on Debian
+# ---------- Node.js 20 (for frontend build) ----------
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
  && apt-get update && apt-get install -y --no-install-recommends nodejs \
  && rm -rf /var/lib/apt/lists/*
@@ -48,26 +45,25 @@ RUN pip install --upgrade pip \
 RUN apt-get purge -y build-essential && apt-get autoremove -y
 
 # ---------- Copy backend ----------
+# (This puts your /src contents at /app/, so /src/main.py becomes /app/main.py)
 COPY document-searcher-backend/src/. /app/
 
-# ---------- Frontend deps + code ----------
+# ---------- Frontend: install, build, copy outputs ----------
 WORKDIR /frontend
 COPY document-searcher-frontend/package*.json /frontend/
+# Production install for deterministic builds
+ENV NODE_ENV=production
 RUN npm ci
+# Copy the rest of the frontend and build
 COPY document-searcher-frontend/ /frontend/
+RUN npm run build
+# Copy the build output into the backend folder so FastAPI can serve it
+RUN mkdir -p /document-searcher-frontend/build && cp -r /frontend/build/* /document-searcher-frontend/build/
 
-# Helpful for dev servers in containers
-ENV HOST=0.0.0.0 \
-    CHOKIDAR_USEPOLLING=true \
-    NODE_ENV=development
+# ---------- Final runtime config ----------
+WORKDIR /app
+EXPOSE 5000
 
-# ---------- Entry point to run both processes ----------
-WORKDIR /
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-
-# Expose both ports (backend 5000, CRA 3000)
-EXPOSE 5000 3000
-
-# CMD launches both services
-CMD ["/entrypoint.sh"]
+# Start the backend by running the backend entry module
+# (which originated as document-searcher-backend/src/main.py)
+CMD ["python", "/app/main.py"]

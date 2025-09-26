@@ -10,7 +10,7 @@ import logging
 import os
 
 
-def start_local_sequence():
+def start_local_sequence(file_path, file_name, file_id, topic):
     """
     Entry point for local process, reads docs and pdf files from the files folders, going through
     the following steps:
@@ -22,11 +22,15 @@ def start_local_sequence():
     - Tags content: False
     - Removes the data: False
     """
-    logging.info("Reading local files...")
-    files = read_local_files()
-    logging.info(f"Found {len(files)} files")
-
-    vectorize_and_upload_files(files)
+    logging.info("Reading uploaded files...")
+    files = [
+        {
+            "path": str(file_path),        
+            "itemId": file_id,
+            "itemName": file_name
+        }
+    ]
+    vectorize_and_upload_files(files, topic)
 
 def start_database_sequence():
     """

@@ -6,6 +6,7 @@ import OneDrivePicker from "./OneDrivePicker";
 import SourcesTable from "./SourcesTable";
 import ConfirmationModal from "../../components/modals/ConfirmationModal";
 import { useAlerts } from "../../providers/AlertsProvider"; 
+import IconButton from "../../components/IconButton";
 
 interface Props {
   topicName: string;
@@ -121,6 +122,52 @@ export default function SourcesModal({ topicName }: Props) {
       .finally(() => setLoading(false));
   };
 
+  const manualUpload = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    // limit to PDF & DOCX (include MIME + extensions for best browser coverage)
+    input.accept = [
+      "application/pdf",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      ".pdf",
+      ".docx",
+    ].join(",");
+
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+
+      const isPdf = file.name.toLowerCase().endsWith(".pdf");
+      const isDocx = file.name.toLowerCase().endsWith(".docx");
+      if (!isPdf && !isDocx) {
+        push({
+          message: "Error: File format not allowed",
+          variant: "error",
+          duration: 5000,
+        });
+        return;
+      }
+
+      try {
+        const form = new FormData();
+        form.append("file", file, file.name);
+        form.append("topic", topicName);
+
+        const res = await fetch("/api/upload-source", {
+          method: "POST",
+          body: form,
+        });
+
+        if (res.ok) {
+          loadSources(true);
+        }
+      } catch (err) {}
+    };
+
+    // trigger it
+    input.click();
+  };
+
   useEffect(() => {
     if (!isOpen) return;
     loadSources(false);
@@ -209,6 +256,15 @@ export default function SourcesModal({ topicName }: Props) {
               <OneDrivePicker 
                 topicName={topicName} 
                 onPicked={()=>{loadSources(true);}}
+              />
+            </div>
+            <div className="p-1">
+              <IconButton
+                iconSrc="https://uxwing.com/wp-content/themes/uxwing/download/file-and-folder-type/file-upload-icon.png"
+                alt="Add topic"
+                size={24}
+                onClick={()=>{manualUpload();}}
+                name="Upload file"
               />
             </div>
           </div>

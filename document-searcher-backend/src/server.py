@@ -1,21 +1,25 @@
-from fastapi import FastAPI, APIRouter, Query
-from fastapi.responses import JSONResponse
-from fastapi import Request
+from fastapi import FastAPI, APIRouter, UploadFile, Request, File, Form, Query
+from fastapi.responses import JSONResponse, PlainTextResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-from orchestration.entrypoint import manual_refresh
+from orchestration.entrypoint import manual_refresh, file_refresh
 from datetime import datetime, timedelta, timezone
 import api.sources as api_sources
 import api.topics as api_topics
 import modules.sources as sources
 import modules.search as search
-import re, logging, threading
+from pathlib import Path
+import re, logging, threading, shutil, asyncio
 
 load_dotenv()
 
 api = APIRouter(prefix="/api")
 
 RESERVED_TABLES = ["sources", "topics", "manifests"]
+UPLOAD_DIR = Path("/tmp/uploads")
+BASE_DIR = Path(__file__).resolve().parent.parent.parent  # repo/backend/main.py -> repo/
+FRONTEND_BUILD = BASE_DIR / "document-searcher-frontend" / "build"
 
 ####################
 # Topics endpoints #
@@ -234,6 +238,30 @@ async def update_source(req: Request):
     else:
         return JSONResponse({"status": "error", "message": "Could not update source"}, status_code=500)
 
+@api.post("/upload-source")
+async def upload_source(topic: str = Form(...), file: UploadFile = File(...)):
+    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    safe_name = re.sub(r'[^a-zA-Z0-9._-]+', '_', file.filename)
+    dest = UPLOAD_DIR / safe_name
+
+    # Write file locally
+    try:
+        with open(dest, "wb") as buffer:
+            while content := await file.read(1024):  # Read in chunks
+                buffer.write(content)
+    finally:
+        await file.close()
+
+    # Execute manual refresh for the uploaded file
+    # t = threading.Thread(target=file_refresh, args=(topic, dest, safe_name), daemon=True)
+    # t.start()
+    file_refresh(topic, dest, safe_name)
+
+    return JSONResponse({"status": "success", "message": "File uploaded"})
+
+###########
+# Refresh #
+###########
 @api.patch("/refresh-topic")
 async def refresh_source(req: Request):
     try:
@@ -284,9 +312,18 @@ async def sinalevi_scrapper_search(req: Request):
 async def web_scrapper_search(req: Request):
     pass
 
+#####################
+# React Interaction #
+#####################
+
+@api.get("/healthz", response_class=PlainTextResponse)
+def healthz():
+    return "ok"
+
 
 app = FastAPI()
 app.include_router(api)
+app.mount("/", StaticFiles(directory=FRONTEND_BUILD, html=True), name="static")
 
 app.add_middleware(
     CORSMiddleware,

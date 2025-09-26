@@ -1,13 +1,12 @@
 from modules.databases import PostgreSQLConnection
 from modules import sequences
+from api import sources
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from multiprocessing import Process, Queue
 from typing import Any, Dict, Iterable
-import os
-import threading
-import time
-import logging
+import os, threading, time, logging, uuid
+
 
 PGSCHEME = os.getenv("PGSCHEME")
 VECTORIZER_FLAG = True
@@ -130,6 +129,20 @@ def manual_refresh(topic_name):
     for r in rows:
         composite = r["id"] if isinstance(r, dict) else r[0]
         sequences.start_sharepoint_sequence(composite, topic_name)
+
+def file_refresh(topic, file_path, file_name):
+    file_id = str(uuid.uuid4())
+    sequences.start_local_sequence(file_path, file_name, file_id, topic)
+    values = [
+        (
+            topic,
+            file_name,
+            file_id,
+            "0100",
+            file_id,
+        ),
+    ]
+    sources.add_sources(values)
 
 ##############
 # Entrypoint #

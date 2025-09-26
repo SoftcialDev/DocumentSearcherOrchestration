@@ -1,13 +1,11 @@
 variable "name_prefix" {
   description = "Short project prefix for resource names (alphanumeric, 3-12 chars)."
   type        = string
-  default     = "docsearch01"
 }
 
 variable "region" {
   description = "Azure region for resources."
   type        = string
-  default     = "eastus"
 }
 
 variable "resource_group_name" {
@@ -20,6 +18,28 @@ variable "tags" {
   description = "Map of tags to apply to all Azure resources."
   type        = map(string)
   default     = {}
+}
+
+#
+# Entra ID App
+#
+variable "app_display_name" {
+  type        = string
+  description = "Display name for the Entra ID application"
+}
+
+variable "redirect_uris" {
+  type        = list(string)
+  description = "SPA redirect URIs"
+  default     = [
+    "http://localhost:3000/"
+  ]
+}
+
+variable "logout_url" {
+  type        = string
+  description = "Optional front-channel logout URL"
+  default     = null
 }
 
 #######################
@@ -40,19 +60,22 @@ variable "acr_admin_password" {
   type = string
 }
 
+variable "acr_image"{
+  description = "value"
+  type = string
+}
+
 ########################################
 # PostgreSQL Module
 ########################################
 variable "postgres_admin_username" {
   description = "Administrator username for PostgreSQL Flexible Server."
   type        = string
-  default     = "Softcial"
 }
 
 variable "postgres_admin_password" {
   description = "Administrator password for PostgreSQL Flexible Server."
   type        = string
-  default     = "Softcial.2025"
   sensitive   = true
 }
 
@@ -65,7 +88,6 @@ variable "postgres_version" {
 variable "postgres_sku_name" {
   description = "SKU name for PostgreSQL Flexible Server, for example 'Standard_D2s_v3'."
   type        = string
-  default     = "B_Standard_B1ms"
 }
 
 variable "postgres_storage_mb" {
