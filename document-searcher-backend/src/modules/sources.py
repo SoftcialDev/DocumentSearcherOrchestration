@@ -1,8 +1,4 @@
-from sentence_transformers import SentenceTransformer
-from modules.databases import PostgreSQLConnection
-from modules.scrappers import SinaleviScrapper
-from modules.search import document_search, sinalevi_search
-from model_registry import get_model
+from modules.logs import write_line
 from datetime import datetime, timedelta, timezone
 from typing import Any
 import requests
@@ -41,7 +37,7 @@ def get_onedrive_users(token: str) -> list:
     return allowed_ids
 
 
-def get_onedrive_content(token, user_id, list_items=None, item_id="root", path=""):
+def get_onedrive_content(onedrive_token: str, user_id: str, manifest: list, logs: list, item_id="root", path=""):
     """
     Traverses onedrive content by their user_id, collecting the ids of the items to download them
     if the id is of a folder, it will recursively traverse all folders and obtain their content
@@ -49,7 +45,7 @@ def get_onedrive_content(token, user_id, list_items=None, item_id="root", path="
     Args:
         token (str): Authentication token to connect with Onedrive
         user_id (str): The owner's id of the folders to traverse
-        list_items (list): The returning content, used to recursively add items. Default value None to get a clean list of records
+        manifest (list): The returning content, used to recursively add items. Default value None to get a clean list of records
         item_id (str): The starting point to traverse. Default value root to traverse the totality of the files
         path (str): Saving path. Default value empty to save on project root.
 
@@ -57,15 +53,17 @@ def get_onedrive_content(token, user_id, list_items=None, item_id="root", path="
         A list of ids representing the files contained within the onedrive folder
     """
     # Initalize return content
-    if not list_items:
-        list_items = []
-    headers = {"Authorization": f"Bearer {token}"}
+    if not manifest:
+        manifest = []
+    headers = {"Authorization": f"Bearer {onedrive_token}"}
 
     url = f"https://graph.microsoft.com/v1.0/users/{user_id}/drive/items/{item_id}/children"
     resp = requests.get(url, headers=headers)
 
     if not resp.ok:
-        print(f"Failed to list {item_id} for {user_id}: {resp.status_code}")
+        logs.append("---ERROR---")
+        logs.append(f"Failed to list {item_id} for {user_id}: {resp.status_code}")
+        logs.append("---ERROR---")
         return
 
     items = resp.json().get("value", [])
@@ -75,13 +73,13 @@ def get_onedrive_content(token, user_id, list_items=None, item_id="root", path="
 
         if "folder" in item:
             # It's a folder, recurse into it
-            print(f"[Folder] {current_path} ({item['id']})")
-            get_onedrive_content(token, user_id, list_items, item["id"], current_path)
+            logs.append(f"[Folder] {current_path} ({item['id']})")
+            get_onedrive_content(onedrive_token, user_id, manifest, item["id"], current_path)
         else:
             # Ignore items without valid extensions
             if not any(name.endswith(ext) for ext in EXTENSIONS):
                 continue
-            list_items.append({
+            manifest.append({
                 "user_id": user_id,
                 "item_id": item["id"],
                 "name": name,
@@ -89,10 +87,10 @@ def get_onedrive_content(token, user_id, list_items=None, item_id="root", path="
                 "size": item.get("size", 0),
                 "lastModifiedDateTime": item.get("lastModifiedDateTime")
             })
-    return list_items
+    return manifest
 
 
-def download_onedrive_files(token: str, manifest: dict[str, Any], save_path=".") -> list:
+def download_onedrive_files(token: str, manifest: dict[str, Any], logs: list, save_path=".") -> list:
     """
     Download a series of files from onedrive and temporaly store in local storage
 
@@ -121,19 +119,20 @@ def download_onedrive_files(token: str, manifest: dict[str, Any], save_path=".")
                     if chunk:
                         f.write(chunk)
 
-            print(f"Downloaded: {filename}")
+            logs.append(f"Downloaded: {filename}")
             files.append({
                 "path" : full_path,
                 "itemId" : item_id
             })
         else:
-            print(f"Failed to download {filename}: {response.status_code} - {response.text}")
+            logs.append(f"Failed to download {filename}: {response.status_code} - {response.text}")
 
     return files
 ##############
 # Sharepoint #
 ##############
-def subscribe_to_sharepoint(token: str, sharepoint_site: str, sharepoint_list: str) -> bool:
+# DEPRECATED
+def subscribe_to_sharepoint(token: str, sharepoint_site: str, sharepoint_list: str, logs: list) -> bool:
 
     expiration_time = (datetime.now(timezone.utc) + timedelta(days=2)).isoformat()
 
@@ -154,28 +153,32 @@ def subscribe_to_sharepoint(token: str, sharepoint_site: str, sharepoint_list: s
     response = requests.post(url, headers=headers, json=payload)
     if response.status_code == 201:
         data = response.json()
-        print("Subscription created successfully.")
-        print("ID:", data.get("id"))
-        print("Expires:", data.get("expirationDateTime"))
+        logs.append("Subscription created successfully.")
+        logs.append("ID:", data.get("id"))
+        logs.append("Expires:", data.get("expirationDateTime"))
         return True
     else:
-        print("Failed to create subscription.")
-        print("Status:", response.status_code)
-        print("Response:", response.text)
+        logs.append("Failed to create subscription.")
+        logs.append("Status:", response.status_code)
+        logs.append("Response:", response.text)
         return False
 
-def get_sharepoint_content(token: str, sharepoint_site: str, sharepoint_list: str, sharepoint_folder: str):
+def get_sharepoint_content(token: str, topic: str, sharepoint_site: str, sharepoint_list: str, sharepoint_folder: str):
     base = "https://graph.microsoft.com/v1.0"
     headers = {"Authorization": f"Bearer {token}", "Accept": "application/json"}
 
-    # 1) resolve drive for this list (works for any doc library)
+    # Drive for this list (document library)
     r = requests.get(f"{base}/sites/{sharepoint_site}/lists/{sharepoint_list}/drive",
                      headers=headers, timeout=30)
     r.raise_for_status()
-    drive_id = r.json().get("id")
+    drive_id = r.json().get("id")  # looks like "b!ryfNTdR..."
 
-    # 2) list ONLY the folder's children
-    url = f"{base}/drives/{drive_id}/items/{sharepoint_folder}/children?$expand=listItem"
+    # Children of the folder: include parentReference + listItem.id
+    url = (
+        f"{base}/drives/{drive_id}/items/{sharepoint_folder}/children"
+        "?$select=id,name,webUrl,size,lastModifiedDateTime,parentReference"
+        "&$expand=listItem($select=id)"
+    )
     resp = requests.get(url, headers=headers, timeout=60)
     resp.raise_for_status()
     data = resp.json()
@@ -185,17 +188,22 @@ def get_sharepoint_content(token: str, sharepoint_site: str, sharepoint_list: st
         name = child.get("name", "")
         if EXTENSIONS and not any(name.lower().endswith(ext) for ext in EXTENSIONS):
             continue
+
+        parent_ref = child.get("parentReference") or {}
         items.append({
+            "topic" : topic,
+            "id": child.get("id", ""),                         # e.g. "01IRFFWM..."
+            "driveId": parent_ref.get("driveId", ""),          # e.g. "b!ryfNTdR..."
+            "listItemId": (child.get("listItem") or {}).get("id"),
+            "parentId": parent_ref.get("id", ""),              # e.g. folder DriveItem ID
             "name": name,
             "webUrl": child.get("webUrl", ""),
-            "id": child.get("id", ""),
             "size": child.get("size"),
             "lastModifiedDateTime": child.get("lastModifiedDateTime"),
-            "driveId": child.get("parentReference", {}).get("driveId"),
-            "listItemId": (child.get("listItem") or {}).get("id"),
         })
-
+    
     return items
+
         
 def download_sharepoint_file(token, manifest, items):
     files = []
@@ -207,12 +215,13 @@ def download_sharepoint_file(token, manifest, items):
     }
 
     for item in items:
+        parent_id = item.get("parentId")
         drive_id = item.get("driveId")
         item_id  = item.get("driveItemId") or item.get("id")
         file_name = item.get("fileName") or item.get("name")
         download_dir = ""
 
-        if not drive_id or not item_id or not file_name:
+        if not drive_id or not item_id or not file_name or not parent_id:
             continue  # missing essentials; skip
 
         # Only .docx / .pdf
@@ -221,7 +230,7 @@ def download_sharepoint_file(token, manifest, items):
             continue
 
         # Skip items already on manifest
-        if (str(drive_id), str(item_id)) in manifest_keys:
+        if (str(parent_id), str(item_id)) in manifest_keys:
             continue
 
         url = f"https://graph.microsoft.com/v1.0/drives/{drive_id}/items/{item_id}/content"
@@ -233,7 +242,12 @@ def download_sharepoint_file(token, manifest, items):
             with open(file_path, "wb") as f:
                 for chunk in response.iter_content(chunk_size=8192):
                     f.write(chunk)
-            files.append({"path": file_path, "itemName": file_name, "itemId": item_id})
+            files.append({
+                "path": file_path, 
+                "itemName": file_name, 
+                "folderId": parent_id,
+                "itemId": item_id
+            })
         else:
             pass
 

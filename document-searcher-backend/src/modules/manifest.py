@@ -3,12 +3,12 @@ import os
 
 PGSCHEME = os.getenv("PGSCHEME")
 
-def collect_manifest(source: str) -> list:
+def collect_manifest(source: str, topic: str) -> list:
     """
         Returns a manifest of the specified source
     """
     postgresql =  PostgreSQLConnection()
-    query = f"SELECT * FROM {PGSCHEME}.manifests WHERE source = '{source}'"
+    query = f"SELECT * FROM {PGSCHEME}.manifests WHERE source = '{source}' AND topic = '{topic}'"
 
     result = postgresql.fetch_all(query)
     return result.get("rows", [])
@@ -22,9 +22,9 @@ def upload_to_manifest(values: list[dict], source: str) -> bool:
 
     query = f"""
         INSERT INTO {PGSCHEME}.manifests
-            (file_id, drive_id, name, web_url, last_modified, source)
-        VALUES (%s, %s, %s, %s, %s, %s)
-        ON CONFLICT (file_id, drive_id) DO UPDATE
+            (topic, file_id, drive_id, name, web_url, last_modified, source)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        ON CONFLICT (topic, file_id, drive_id) DO UPDATE
         SET name = EXCLUDED.name,
             web_url = EXCLUDED.web_url,
             last_modified = EXCLUDED.last_modified;
@@ -32,8 +32,9 @@ def upload_to_manifest(values: list[dict], source: str) -> bool:
 
     for element in values:
         inserts.append((
+            element.get("topic"),
             element.get("id"),
-            element.get("driveId"),
+            element.get("parentId"),
             element.get("name","")[:255], # Truncates long files names
             element.get("webUrl"),
             element.get("lastModifiedDateTime"),

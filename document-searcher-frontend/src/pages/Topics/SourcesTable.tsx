@@ -62,7 +62,11 @@ export default function SourcesTable({
 
                 <div className="w-48 text-center">
                   <span className="text-xs px-2 py-0.5 rounded bg-slate-200 uppercase" style={{background: "#024A59", color: "#ffffff"}}>
-                    {s.site}
+                    {
+                      ({ onedrive: "Onedrive", sharepoint: "Sharepoint" }[
+                        (s.site || "").toLowerCase()
+                      ] ?? "Localfile")
+                    }
                   </span>
                 </div>
 

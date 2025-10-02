@@ -1,7 +1,5 @@
-import psycopg
-import pyodbc
-import os
-import logging
+from modules.logs import write_block, write_line
+import psycopg, pyodbc, os
 
 class PostgreSQLConnection:
     """
@@ -38,7 +36,11 @@ class PostgreSQLConnection:
             )
             return conn
         except Exception as e:
-            logging.error(f"{e}")
+            logs = []
+            logs.append("---ERROR---")
+            logs.append(f"{e}")
+            logs.append("---ERROR---")
+            write_block(logs, "Database")
             return None
 
     
@@ -58,7 +60,11 @@ class PostgreSQLConnection:
         """
         conn = self.start_connection()
         if not conn:
-            logging.error("Unable to connect with database")
+            logs = []
+            logs.append("---ERROR---")
+            logs.append("Unable to connect with database")
+            logs.append("---ERROR---")
+            write_block(logs, "Database")
             return None
         try:
             with conn.cursor() as cur:
@@ -73,8 +79,36 @@ class PostgreSQLConnection:
                 }
 
         except Exception as e:
-            logging.error(f"{e}")
+            logs = []
+            logs.append("---ERROR---")
+            logs.append(f"{e}")
+            logs.append("---ERROR---")
+            write_block(logs, "Database")
             return {"error": str(e)}
+        finally:
+            conn.close()
+
+    def fetch_one_value(self, query):
+        conn = self.start_connection()
+        if not conn:
+            logs = []
+            logs.append("---ERROR---")
+            logs.append("Unable to connect with database")
+            logs.append("---ERROR---")
+            write_block(logs, "Database")
+            return ""
+        try:
+            with conn.cursor() as cur:
+                cur.execute(query)
+                row = cur.fetchone()  # first row only
+                return row[0] if row else ""
+        except Exception as e:
+            logs = []
+            logs.append("---ERROR---")
+            logs.append(f"{e}")
+            logs.append("---ERROR---")
+            write_block(logs, "Database")
+            return ""
         finally:
             conn.close()
 
@@ -90,7 +124,11 @@ class PostgreSQLConnection:
         """
         conn = self.start_connection()
         if not conn:
-            logging.error("Unable to connect with database")
+            logs = []
+            logs.append("---ERROR---")
+            logs.append("Unable to connect with database")
+            logs.append("---ERROR---")
+            write_block(logs, "Database")
             return False
         try:
             with conn.cursor() as cur:
@@ -98,10 +136,14 @@ class PostgreSQLConnection:
             conn.commit()
             return True
         except Exception as e:
+            logs = []
+            logs.append("---ERROR---")
             if 'already exists' in str(e):
-                logging.error(f"Table already exists: {e}")
+                logs.append(f"Table already exists: {e}")
             else:
-                logging.error(f"{e}")
+                logs.append(f"{e}")
+            logs.append("---ERROR---")
+            write_block(logs, "Database")
             return False
         finally:
             conn.close()
@@ -119,14 +161,22 @@ class PostgreSQLConnection:
         """
         conn = self.start_connection()
         if not conn:
-            logging.error("Unable to connect with database")
+            logs = []
+            logs.append("---ERROR---")
+            logs.append("Unable to connect with database")
+            logs.append("---ERROR---")
+            write_block(logs, "Database")
             return False
         try:
             with conn.cursor() as cur:
                 cur.executemany(query, values)
             return True
         except Exception as e:
-            logging.error(f"{e}")
+            logs = []
+            logs.append("---ERROR---")
+            logs.append(f"{e}")
+            logs.append("---ERROR---")
+            write_block(logs, "Database")
             return False
         finally:
             conn.close()
@@ -194,7 +244,11 @@ class SQLServerConnection:
             }
 
         except Exception as e:
-            logging.error(f"{e}")
+            logs = []
+            logs.append("---ERROR---")
+            logs.append(f"{e}")
+            logs.append("---ERROR---")
+            write_block(logs, "Database")
             return {"error": str(e)}
         finally:
             conn.close()
@@ -216,7 +270,11 @@ class SQLServerConnection:
             cursor.execute(query)
             conn.commit()
         except Exception as e:
-            logging.error(f"{e}")
+            logs = []
+            logs.append("---ERROR---")
+            logs.append(f"{e}")
+            logs.append("---ERROR---")
+            write_block(logs, "Database")
         finally:
             conn.close()
 
@@ -231,7 +289,11 @@ class SQLServerConnection:
                 cur.executemany(query, values)
                 conn.commit()
         except Exception as e:
-            logging.error(f"{e}")
+            logs = []
+            logs.append("---ERROR---")
+            logs.append(f"{e}")
+            logs.append("---ERROR---")
+            write_block(logs, "Database")
         finally:
             conn.close()
 

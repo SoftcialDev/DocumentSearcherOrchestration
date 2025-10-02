@@ -1,5 +1,5 @@
 from fastapi import FastAPI, APIRouter, UploadFile, Request, File, Form, Query
-from fastapi.responses import JSONResponse, PlainTextResponse
+from fastapi.responses import JSONResponse, PlainTextResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
@@ -10,7 +10,7 @@ import api.topics as api_topics
 import modules.sources as sources
 import modules.search as search
 from pathlib import Path
-import re, logging, threading, shutil, asyncio
+import re, logging, threading, shutil, asyncio, os, json
 
 load_dotenv()
 
@@ -315,15 +315,22 @@ async def web_scrapper_search(req: Request):
 #####################
 # React Interaction #
 #####################
-
 @api.get("/healthz", response_class=PlainTextResponse)
 def healthz():
     return "ok"
 
+api.get("/app-config.js")
+def app_config_js():
+    data = {
+        "msalClientId": os.getenv("MSAL_CLIENT_ID", ""),
+        "msalAuthority": os.getenv("MSAL_AUTHORITY", ""),
+    }
+    body = "window.__APP_CONFIG__ = " + json.dumps(data) + ";"
+    return Response(body, media_type="application/javascript")
 
 app = FastAPI()
 app.include_router(api)
-app.mount("/", StaticFiles(directory=FRONTEND_BUILD, html=True), name="static")
+# app.mount("/", StaticFiles(directory=FRONTEND_BUILD, html=True), name="static")
 
 app.add_middleware(
     CORSMiddleware,

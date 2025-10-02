@@ -19,7 +19,8 @@ def create_topic(name: str) -> bool:
     pgscheme = os.getenv("PGSCHEME")
     pgsql = databases.PostgreSQLConnection()
     query = f"""CREATE TABLE {pgscheme}.{name} (
-        id text,
+        item_id text,
+        drive_id text,
         chunk_id integer,
         title text,
         content text,
@@ -55,11 +56,27 @@ def delete_topic(name: str) -> bool:
     """
     pgsql = databases.PostgreSQLConnection()
     pgscheme = os.getenv("PGSCHEME")
-    # Remove the origin table
-    query = f"""DROP TABLE {pgscheme}.{name}"""
-    result = pgsql.execute_one(query)
+    # Collect the drive_id references
+    drive_ids_query = f"""SELECT DISTINCT drive_id FROM {pgscheme}.{name}"""
+    drive_ids = pgsql.fetch_all(drive_ids_query)
 
-    if result:
+    # Remove the origin table
+    drop_query = f"""DROP TABLE {pgscheme}.{name}"""
+    drop_result = pgsql.execute_one(drop_query)
+
+    if drop_result:
+        # Remove record from manifests table
+        sources_query = f"""DELETE FROM {pgscheme}.manifests WHERE topic = '{name}'"""
+        sources_result = pgsql.execute_one(sources_query)
+    
+        # Remove record from sources table
+        manifests_query = f"""DELETE FROM {pgscheme}.sources WHERE topic = '{name}'"""
+        manifests_result = pgsql.execute_one(manifests_query)
+
         # Remove record from topics table
-        query = f"""DELETE FROM {pgscheme}.topics WHERE name = '{name}'"""
-        return pgsql.execute_one(query)
+        topics_query = f"""DELETE FROM {pgscheme}.topics WHERE name = '{name}'"""
+        topics_result = pgsql.execute_one(topics_query)
+
+        return topics_result and manifests_result and sources_result
+    else:
+        return False

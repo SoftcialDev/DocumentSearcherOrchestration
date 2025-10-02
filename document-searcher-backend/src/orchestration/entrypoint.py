@@ -1,4 +1,5 @@
 from modules.databases import PostgreSQLConnection
+from modules.logs import write_line, write_block
 from modules import sequences
 from api import sources
 from datetime import datetime, timedelta
@@ -75,10 +76,10 @@ def vectorizer(schedule):
         for r in rows
     ]
     if tasks:
-        logging.info(f"Starting orchestration with {len(tasks)} sources at {schedule}")
+        write_line(f"Starting orchestration with {len(tasks)} sources at {schedule}")
         run_in_processes(tasks, max_workers=3)
     else:
-        logging.info(f"No topics scheduled at {schedule}")
+        write_line(f"No topics scheduled at {schedule}")
 
 def run_vectorizer(func):
     def worker():
@@ -100,12 +101,12 @@ def run_vectorizer(func):
                 schedule = str(now.hour * 100 + (30 if now.minute >= 30 else 0))
                 func(schedule)
 
-            except Exception:
+            except Exception as e:
                 logging.exception("Background task raised an exception")
 
             # sleep until the next boundary
             sleep_seconds = (next_run - datetime.now(tz)).total_seconds()
-            logging.info(f"Waiting {sleep_seconds} for next iteration")
+            write_line(f"Waiting {sleep_seconds} for next iteration")
             if sleep_seconds > 0:
                 time.sleep(sleep_seconds)
 
@@ -117,7 +118,7 @@ def switch_vectorizer(status: bool):
     VECTORIZER_FLAG = status
 
 def manual_refresh(topic_name):
-    logging.info(f"Starting manual refresh of topic {topic_name}")
+    write_line(f"Starting manual refresh of topic {topic_name}")
     pgsql = PostgreSQLConnection()
     query = f"""
         SELECT id

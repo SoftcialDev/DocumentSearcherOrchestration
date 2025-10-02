@@ -1,9 +1,6 @@
 from model_registry import get_model
 from docx import Document
-import fitz
-import json
-import logging
-import os
+import fitz, json, os
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -83,7 +80,7 @@ def string_to_chunks(text: str, max_words=200, overlap=0.2) -> list:
 
     return chunks
 
-def pdf_to_chunks(filepath: str, max_words=200, overlap=0.2) -> list:
+def pdf_to_chunks(filepath: str, logs: list, max_words=200, overlap=0.2) -> list:
     """
 	Reads and splits the content of a PDF file into chunks of delimited sizes.
     
@@ -94,14 +91,14 @@ def pdf_to_chunks(filepath: str, max_words=200, overlap=0.2) -> list:
     Returns:
 		list: A list of str, each str represent a portion of the original text.
     """
-    logging.info(f"Parsing PDF: {filepath}")
+    logs.append(f"Parsing PDF: {filepath}")
     doc = fitz.open(filepath)
     text = ""
 
     for page in doc:
         text += page.get_text()
 
-    logging.info(f"Extracted {len(text)} characters from PDF.")
+    logs.append(f"Extracted {len(text)} characters from PDF.")
     paragraphs = [p.strip() for p in text.split("\n") if p.strip()]
 
     chunks = []
@@ -123,11 +120,11 @@ def pdf_to_chunks(filepath: str, max_words=200, overlap=0.2) -> list:
     if current_chunk:
         chunks.append(" ".join(current_chunk))
 
-    logging.info(f"Split into {len(chunks)} chunks.")
+    logs.append(f"Split into {len(chunks)} chunks.")
     return chunks
 
 
-def docx_to_chunks(filepath: str, max_words=200, overlap=0.2) -> list:
+def docx_to_chunks(filepath: str, logs: list, max_words=200, overlap=0.2) -> list:
     """
     Reads and splits the content of a DOCX file into chunks of delimited sizes.
     
@@ -139,11 +136,11 @@ def docx_to_chunks(filepath: str, max_words=200, overlap=0.2) -> list:
 		list: A list of str, each str represent a portion of the original text.
     """
     
-    logging.info(f"Parsing DOCX: {filepath}")
+    logs.append(f"Parsing DOCX: {filepath}")
     doc = Document(filepath)
     text = "\n".join([p.text for p in doc.paragraphs])
     paragraphs = [p.strip() for p in text.split("\n") if p.strip()]
-    logging.info(f"Extracted {len(text)} characters from DOCX.")
+    logs.append(f"Extracted {len(text)} characters from DOCX.")
     
     chunks = []
     current_chunk = []
@@ -151,7 +148,7 @@ def docx_to_chunks(filepath: str, max_words=200, overlap=0.2) -> list:
     max_total = max_words
     step_words = int(max_words * (1 - overlap))
 
-    logging.info(f"Parsing DOCX: {filepath}")
+    logs.append(f"Parsing DOCX: {filepath}")
     for paragraph in paragraphs:
         words = paragraph.split()
         if word_count + len(words) > max_total:
@@ -165,7 +162,7 @@ def docx_to_chunks(filepath: str, max_words=200, overlap=0.2) -> list:
     if current_chunk:
         chunks.append(" ".join(current_chunk))
 
-    logging.info(f"Split into {len(chunks)} chunks.")
+    logs.append(f"Split into {len(chunks)} chunks.")
     return chunks
 
 def chunks_to_embeddings(chunks: list) -> list:

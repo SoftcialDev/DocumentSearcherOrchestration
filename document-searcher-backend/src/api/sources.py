@@ -1,4 +1,5 @@
 from modules import databases
+from modules.logs import write_line
 import os
 
 PGSCHEME = os.getenv("PGSCHEME")
@@ -22,18 +23,28 @@ def add_sources(values: list):
 
 def remove_source(topic_name: str, source_id: str):
     pgsql = databases.PostgreSQLConnection()
-    item_id = source_id.split(",", 2)[1].strip() if "," in source_id else source_id.strip()
+    parent_id = source_id.rsplit(",", 1)[-1].strip()
+        
+    # Start deleting
     query_sources = f"""
         DELETE FROM {PGSCHEME}.sources WHERE topic = '{topic_name}' AND id = '{source_id}'
     """
     result_sources = pgsql.execute_one(query_sources)
+    write_line(query_sources)
 
     query_vectors = f"""
-        DELETE FROM {PGSCHEME}.{topic_name} WHERE id = '{source_id}'
+        DELETE FROM {PGSCHEME}.{topic_name} WHERE drive_id = '{parent_id}'
     """
     result_vectors = pgsql.execute_one(query_vectors)
+    write_line(query_vectors)
 
-    return result_sources and result_vectors
+    query_manifests = f"""
+        DELETE FROM {PGSCHEME}.manifests WHERE drive_id = '{parent_id}' AND topic = '{topic_name}'
+    """
+    result_manifests = pgsql.execute_one(query_manifests)
+    write_line(query_manifests)
+
+    return result_sources and result_vectors and result_manifests
 
 def update_source(topic: str, id: str, schedule: str):
     pgsql = databases.PostgreSQLConnection()

@@ -1,7 +1,4 @@
-import msal
-import requests
-import os
-import logging
+import msal, requests, os
 
 # Sharepoint authentication
 SHAREPOINT_ENTRA_SECRET_VALUE = os.getenv("SHAREPOINT_ENTRA_SECRET_VALUE")
@@ -15,7 +12,7 @@ ONEDRIVE_ENTRA_CLIENT_ID = os.getenv("ONEDRIVE_ENTRA_CLIENT_ID")
 # Graph Authentication
 GRAPH_TOKEN_ENDPOINT = os.getenv("GRAPH_TOKEN_ENDPOINT")
 
-def get_sharepoint_token():
+def get_sharepoint_token(logs: list):
 
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -34,10 +31,12 @@ def get_sharepoint_token():
         token = response.json()["access_token"]
         return token
     except requests.exceptions.RequestException as e:
-        logging.exception("Token request failed:", e)
+        logs.append("---ERROR---")
+        logs.append(f"Sharepoint Token request failed: {e}")
+        logs.append("---ERROR---")
         return None
     
-def get_onedrive_token():
+def get_onedrive_token(logs: list):
 
     AUTHORITY = f"https://login.microsoftonline.com/{ONEDRIVE_ENTRA_TENANT_ID}"
     SCOPE = ["https://graph.microsoft.com/.default"]  # Application permission scope
@@ -54,5 +53,7 @@ def get_onedrive_token():
         token = result["access_token"]
         return token
     else:
-        logging.error("Failed to get token:", result.get("error_description"))
+        logs.append("---ERROR---")
+        logs.append(f"Onedrive Token request failed: {result.get("error_description")}")
+        logs.append("---ERROR---")
         return None

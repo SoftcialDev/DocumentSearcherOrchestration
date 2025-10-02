@@ -1,4 +1,5 @@
 from modules.databases import PostgreSQLConnection
+from modules.logs import write_line
 import psutil
 import logging
 import os
@@ -34,12 +35,14 @@ def database_setup() -> bool:
 
     manifest_query = f"""
         CREATE TABLE IF NOT EXISTS {PGSCHEME}.manifests (
+            topic VARCHAR(255) NOT NULL,
             file_id VARCHAR(255) NOT NULL,
             drive_id VARCHAR(255) NOT NULL,
             name VARCHAR(255) NOT NULL, 
             web_url TEXT NOT NULL,
             last_modified TIMESTAMPTZ NOT NULL,
-            PRIMARY KEY (file_id, drive_id)
+            source VARCHAR(255) NOT NULL,
+            PRIMARY KEY (topic, file_id, drive_id)
         );
     """
     if not pgsql.execute_one(manifest_query):
@@ -60,7 +63,7 @@ def env_checkup() -> tuple[bool, bool]:
     PGSCHEME = os.getenv("PGSCHEME")
     PGPASSWORD = os.getenv("PGPASSWORD")
     if not PGHOST or not PGUSER or not PGPORT or not PGDATABASE or not PGSCHEME or not PGPASSWORD:
-        logging.error("Vector database variables are not set, system will not be able to communicate with vectors")
+        write_line("Vector database variables are not set, system will not be able to communicate with vectors")
         error = True
 
     # Strictly necessary variables for Sharepoint / Onedrive / Graph
@@ -71,21 +74,21 @@ def env_checkup() -> tuple[bool, bool]:
     OECI = os.getenv("ONEDRIVE_ENTRA_CLIENT_ID")
     GET = os.getenv("GRAPH_TOKEN_ENDPOINT")
     if not SESV or not SECI or not OESV or not OETI or not OECI or not GET:
-        logging.error("Microsoft services variables are not set, system will not be able to download files from sources")
+        write_line("Microsoft services variables are not set, system will not be able to download files from sources")
         error = True
 
     # Necessary for some functions, can be omitted by using default values
     EXTENSIONS = os.getenv("EXTENSIONS", None)
     if not EXTENSIONS:
-        logging.warning(f"Extensions variable are not set, using default formats .PDF .DOCX")
+        write_line(f"Extensions variable are not set, using default formats .PDF .DOCX")
         warning += 1
 
     return error, warning
 
-def ram_checkup(required_gb: int):
+def ram_checkup(required_gb: int, logs: list):
     total_gb = psutil.virtual_memory().total / (1024 ** 3)
-    logging.info(f"Detected RAM: {total_gb:.2f} GB")
+    write_line(f"Detected RAM: {total_gb:.2f} GB")
     if total_gb < required_gb:
-        logging.error("Not enough RAM detected to run this program")
+        write_line("Not enough RAM detected to run this program")
         return False
     return True

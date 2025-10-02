@@ -1,13 +1,11 @@
 from modules.databases import SQLServerConnection, PostgreSQLConnection
-from model_registry import get_model
+from modules.logs import write_line, write_block
 from pathlib import Path
 import modules.authenticators as auth
 import modules.conversions as conv
 import modules.manifest as manifest
 import modules.sources as sources
-import hashlib
-import logging
-import os
+import hashlib, logging, os
 
 
 def start_local_sequence(file_path, file_name, file_id, topic):
@@ -22,15 +20,18 @@ def start_local_sequence(file_path, file_name, file_id, topic):
     - Tags content: False
     - Removes the data: False
     """
-    logging.info("Reading uploaded files...")
+    logs = []
+    logs.append("Reading uploaded files...")
     files = [
         {
             "path": str(file_path),        
             "itemId": file_id,
-            "itemName": file_name
+            "itemName": file_name,
+            "folderId": file_id # For local files, folder_id uses file_id
         }
     ]
-    vectorize_and_upload_files(files, topic)
+    vectorize_and_upload_files(files, topic, logs)
+    write_block(logs, "Local file upload")
 
 def start_database_sequence():
     """
@@ -45,29 +46,29 @@ def start_database_sequence():
     - Removes the data: False
     """
     SYNCTABLES = os.getenv("SYNCTABLES").split(",")
-    
+    logs = []
     sqlserver = SQLServerConnection()
     postgresql = PostgreSQLConnection()
 
-    logging.info(f"Tables to be fetched: {SYNCTABLES}")
+    logs.append(f"Tables to be fetched: {SYNCTABLES}")
 
     results = {}
     for table in SYNCTABLES:
-        logging.info(f"Fetching source database for {table}")
+        logs.append(f"Fetching source database for {table}")
         query = f"SELECT * FROM {table}"
         result = sqlserver.fetch_all(query)
-        logging.info(f"Obtained {len(result['rows'])} records from source {table}")
+        logs.append(f"Obtained {len(result['rows'])} records from source {table}")
         results[table] = result
 
     originals = {}
     for table in SYNCTABLES:
-        logging.info(f"Fetching destination database for {table}")
+        logs.append(f"Fetching destination database for {table}")
         query = f"SELECT id, content_hash FROM {table}"
         result = postgresql.fetch_all(query)
-        logging.info(f"Obtained {len(result['rows'])} records from destination {table}")
+        logs.append(f"Obtained {len(result['rows'])} records from destination {table}")
         originals[table] = result
 
-    logging.info("Converting data -> human read -> chunks...")
+    logs.append("Converting data -> human read -> chunks...")
     chunks_sets = {}
     chunk_count = 0
     for table, result in results.items():
@@ -78,7 +79,7 @@ def start_database_sequence():
             chunks = conv.string_to_chunks(text)
             chunks_sets[f"{table}+{id_value}"] = chunks
             chunk_count = chunk_count + len(chunks)
-    logging.info(f"Created {chunk_count} chunks")
+    logs.append(f"Created {chunk_count} chunks")
 
     final_records = compare_records(chunks_sets, originals, sqlserver)
 
@@ -123,19 +124,21 @@ def start_database_sequence():
                     "embedding": None
                 })
 
-        logging.info(f"Uploading {len(new_embeddings)} new vectors")
-        upload_embeddings(new_embeddings)
-        logging.info("Embeddings uploaded")
+        logs.append(f"Uploading {len(new_embeddings)} new vectors")
+        upload_embeddings(new_embeddings, logs)
+        logs.append("Embeddings uploaded")
 
-        logging.info(f"Updating {len(updated_embeddings)} existing vectors")
-        refresh_embeddings(updated_embeddings)
-        logging.info("Embeddings updated")
+        logs.append(f"Updating {len(updated_embeddings)} existing vectors")
+        refresh_embeddings(updated_embeddings, logs)
+        logs.append("Embeddings updated")
 
-        logging.info(f"Deleting {len(removed_embeddings)} removed vectors")
-        delete_embeddings(removed_embeddings)
-        logging.info("Embeddings deleted")
+        logs.append(f"Deleting {len(removed_embeddings)} removed vectors")
+        delete_embeddings(removed_embeddings, logs)
+        logs.append("Embeddings deleted")
 
-def start_sharepoint_sequence(composite: str, topic:str):
+        write_block(logs, "DB Sequence")
+
+def start_sharepoint_sequence(key: str, topic:str):
     """
     Entry point for sharepoint consumptions, reads the content of a subscribed sharepoint
     folder, fetches their content and parse the result in the following steps:
@@ -148,31 +151,38 @@ def start_sharepoint_sequence(composite: str, topic:str):
     - Removes the data: True
     """
     SOURCE = "SHAREPOINT"
-    sharepoint_token = auth.get_sharepoint_token()
+    logs = []
+    sharepoint_token = auth.get_sharepoint_token(logs)
 
-    site, list, folder = composite.split(",", 2)
+    try:
+        site, list_id, folder = (p.strip() for p in key.split(",", 2))
+    except ValueError:
+        # unsplittable (not 3 parts) → end the process here
+        return
 
-    logging.info("Reading manifest...")
-    man = manifest.collect_manifest(SOURCE)
-    logging.info("Manifest loaded")
+    logs.append("Reading manifest...")
+    man = manifest.collect_manifest(SOURCE, topic)
+    logs.append("Manifest loaded")
 
-    logging.info("Reading remote content metadata...")
-    list_items = sources.get_sharepoint_content(sharepoint_token, site, list, folder)
-    logging.info("Remote metadata loaded")
+    logs.append("Reading remote content metadata...")
+    list_items = sources.get_sharepoint_content(sharepoint_token, topic, site, list_id, folder)
+    logs.append("Remote metadata loaded")
 
-    logging.info("Downloading differences")
+    logs.append("Downloading differences")
     downloaded_files = sources.download_sharepoint_file(sharepoint_token, man, list_items)
-    logging.info(f"Downloaded {len(downloaded_files)} files")
+    logs.append(f"Downloaded {len(downloaded_files)} files")
 
-    vectorize_and_upload_files(downloaded_files, topic)
+    vectorize_and_upload_files(downloaded_files, topic, logs)
 
-    logging.info("Registering changes to manifest...")
+    logs.append("Registering changes to manifest...")
     manifest.upload_to_manifest(list_items, SOURCE)
-    logging.info("Manifest updated")
+    logs.append("Manifest updated")
 
-    logging.info("Cleaning local information...")
-    clean_files(downloaded_files)
-    logging.info("Local server cleaned")
+    logs.append("Cleaning local information...")
+    clean_files(downloaded_files, logs)
+    logs.append("Local server cleaned")
+
+    write_block(logs, "SH Sequence")
 
 def start_onedrive_sequence():
     """
@@ -187,30 +197,34 @@ def start_onedrive_sequence():
     - Removes the data: True
     """
     SOURCE = "ONEDRIVE"
-    onedrive_token = auth.get_onedrive_token()
+    logs = []
+    onedrive_token = auth.get_onedrive_token(logs)
 
-    logging.info("Getting users IDS")
+    logs.append("Getting users IDS")
     allowed_ids = sources.get_onedrive_users(onedrive_token)
-    logging.info(f"Obtained {len(allowed_ids)} ids")
+    logs.append(f"Obtained {len(allowed_ids)} ids")
 
-    logging.info("Getting users drives content")
+    logs.append("Getting users drives content")
     manifest = []
     for id in allowed_ids:
-        logging.info(f"Reading files of {id}")
-        manifest = sources.get_onedrive_content(onedrive_token, id, manifest)
-    logging.info(f"Fetched {len(manifest)} items metadata")
+        logs.append(f"Reading files of {id}")
+        manifest = sources.get_onedrive_content(onedrive_token, id, manifest, logs)
+    logs.append(f"Fetched {len(manifest)} items metadata")
 
-    logging.info("Downloading items...")
-    downloaded_files = sources.download_onedrive_files(onedrive_token, manifest)
-    logging.info(f"Downloaded {len(downloaded_files)} files")
+    logs.append("Downloading items...")
+    downloaded_files = sources.download_onedrive_files(onedrive_token, manifest, logs)
+    logs.append(f"Downloaded {len(downloaded_files)} files")
 
-    vectorize_and_upload_files(downloaded_files, "onedrive")
+    vectorize_and_upload_files(downloaded_files, "onedrive", logs)
 
-    logging.info("Cleaning local information...")
-    clean_files(downloaded_files)
-    logging.info("Local server cleaned")
+    logs.append("Cleaning local information...")
+    clean_files(downloaded_files, logs)
+    logs.append("Local server cleaned")
+
+    write_block(logs, "OD Sequence")
 
 # Helper methods
+# DEPRECATED
 def read_local_files():
     files_dir = Path(__file__).parent / "files"
     all_files = [
@@ -222,16 +236,20 @@ def read_local_files():
     ]
     return all_files
 
-def clean_files(file_paths: list):
+def clean_files(file_paths: list, logs: list):
     for file in file_paths:
         try:
             if os.path.exists(file['path']):
                 os.remove(file['path'])
-                logging.info(f"Deleted: {file['path']}")
+                logs.append(f"Deleted: {file['path']}")
             else:
-                logging.warning(f"File not found: {file['path']}")
+                logs.append("---ERROR---")
+                logs.append(f"File not found: {file['path']}")
+                logs.append("---ERROR---")
         except Exception as e:
-            logging.exception(f"Failed to delete {file['path']}: {e}")
+            logs.append("---ERROR---")
+            logs.append(f"Failed to delete {file['path']}: {e}")
+            logs.append("---ERROR---")
 
 def compare_records(chunks_sets, originals):
     summary = {}
@@ -277,7 +295,7 @@ def compare_records(chunks_sets, originals):
 
     return summary
 
-def upload_embeddings(embeddings: list):
+def upload_embeddings(embeddings: list, logs: list):
     postgresql =  PostgreSQLConnection()
     # Group inserts by table
     records_to_insert = {}
@@ -285,8 +303,8 @@ def upload_embeddings(embeddings: list):
     for table in tables:
         records_to_insert[table] = {
             "query" : f"""
-                INSERT INTO public.{table} (id, chunk_id, title, content, content_hash, vector)
-                VALUES (%s, %s, %s, %s, %s, %s)
+                INSERT INTO public.{table} (item_id, drive_id, chunk_id, title, content, content_hash, vector)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
             """,
             "records" : []
         }
@@ -294,12 +312,13 @@ def upload_embeddings(embeddings: list):
     for embedding in embeddings:
         for chunk_id, (content, emb) in enumerate(embedding["embedding"]):
             if "\x00" in content:
-                logging.warning(f"Skipping chunk {chunk_id} (NUL byte detected)")
+                logs.append(f"Skipping chunk {chunk_id} (NUL byte detected)")
                 continue
 
             content_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
             records_to_insert[embedding["table"]]["records"].append((
                 embedding["itemId"],
+                embedding["folderId"],
                 chunk_id,
                 embedding["itemName"],
                 content,
@@ -309,9 +328,9 @@ def upload_embeddings(embeddings: list):
 
     for table, group in records_to_insert.items():
         postgresql.execute_many(group["query"], group["records"])
-        logging.info(f"Uploaded {len(group['records'])} records into {table}.")
+        logs.append(f"Uploaded {len(group['records'])} records into {table}.")
 
-def refresh_embeddings(embeddings: list):
+def refresh_embeddings(embeddings: list, logs: list):
     postgresql =  PostgreSQLConnection()
 
     # Group updates by table
@@ -330,7 +349,7 @@ def refresh_embeddings(embeddings: list):
     for embedding in embeddings:
         for chunk_id, (content, emb) in enumerate(embedding["embedding"]):
             if "\x00" in content:
-                logging.warning(f"Skipping chunk {chunk_id} (NUL byte detected)")
+                logs.append(f"Skipping chunk {chunk_id} (NUL byte detected)")
                 continue
 
             content_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
@@ -344,10 +363,10 @@ def refresh_embeddings(embeddings: list):
 
     for table, group in records_to_update.items():
         postgresql.execute_many(group["query"], group["records"])
-        logging.info(f"Updated {len(group['records'])} records from {table}.")
+        logs.append(f"Updated {len(group['records'])} records from {table}.")
 
 
-def delete_embeddings(embeddings: list):
+def delete_embeddings(embeddings: list, logs: list):
     postgresql =  PostgreSQLConnection()
 
     records_to_delete = {}
@@ -363,23 +382,23 @@ def delete_embeddings(embeddings: list):
             
     for table, group in records_to_delete.items():
         postgresql.execute_many(group["query"], group["records"])
-        logging.info(f"Deleted {len(group['records'])} records from {table}.")
+        logs.append(f"Deleted {len(group['records'])} records from {table}.")
         
-def vectorize_and_upload_files(files, table):
+def vectorize_and_upload_files(files: list, table: str, logs:list):
     if not files:
-        logging.info("No files detected, aborting...")
+        logs.append("No files detected, aborting...")
         return
 
-    logging.info("Vectorizing new files...")
+    logs.append("Vectorizing new files...")
     embeddings = []
     if files:
         for file in files:
-            logging.info(f"Vectorizing file: {file['path']}")
+            logs.append(f"Vectorizing file: {file['path']}")
             chunks = None
             if file["path"].endswith(".docx"):
-                chunks = conv.docx_to_chunks(file["path"])
+                chunks = conv.docx_to_chunks(file["path"], logs)
             elif file["path"].endswith(".pdf"):
-                chunks = conv.pdf_to_chunks(file["path"])
+                chunks = conv.pdf_to_chunks(file["path"], logs)
 
             if chunks is not None:
                 embedding = conv.chunks_to_embeddings(chunks)
@@ -387,10 +406,11 @@ def vectorize_and_upload_files(files, table):
                     "table" : table,
                     "itemId" : file["itemId"],
                     "itemName" : file["itemName"],
+                    "folderId" : file["folderId"],
                     "embedding" : embedding
                 })
-    logging.info("All files vectorized")
+    logs.append("All files vectorized")
 
-    logging.info("Uploading new vectors")
-    upload_embeddings(embeddings)
-    logging.info("Embeddings uploaded")
+    logs.append("Uploading new vectors")
+    upload_embeddings(embeddings, logs)
+    logs.append("Embeddings uploaded")

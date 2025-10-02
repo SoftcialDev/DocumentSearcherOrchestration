@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 import time, re, random, logging, subprocess
 
 class Scrapper(ABC):
-
+    # Currently not in use
     def __init__(self, arguments: list, experimentals: dict):
         self.opts = webdriver.ChromeOptions()
         self.service = webdriver.ChromeService(log_output=subprocess.DEVNULL)
