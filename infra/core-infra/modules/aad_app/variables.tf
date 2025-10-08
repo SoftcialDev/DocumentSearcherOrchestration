@@ -6,7 +6,6 @@ variable "display_name" {
 variable "redirect_uris" {
   description = "Redirect URIs for the SPA (e.g., https://your.domain/, http://localhost:3000)"
   type        = list(string)
-  default     = ["https://documentsearcher.softcial.com/"]
 }
 
 variable "logout_url" {

@@ -3,10 +3,7 @@ variable "resource_group_name" { type = string }
 variable "location"            { type = string }
 
 # Image & runtime
-variable "image"{ 
-  type = string 
-  default = "mcr.microsoft.com/azuredocs/containerapps-helloworld:latest"
-}
+variable "image"{ type = string }
 variable "target_port" { type = number }                   # e.g. 3000 or 8000
 
 variable "cpu"{ 

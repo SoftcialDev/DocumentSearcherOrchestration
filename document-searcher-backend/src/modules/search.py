@@ -25,20 +25,20 @@ def document_search(query_text: str, topic: str, format: str, limit: int = 5):
     sql = f"""
         WITH q(vec) AS (VALUES ('{vec_lit}'::vector)),
         doc_hits AS (
-            SELECT t.id, MIN(t.vector <=> q.vec) AS min_distance
+            SELECT t.item_id, MIN(t.vector <=> q.vec) AS min_distance
             FROM {pgscheme}.{topic} AS t
             CROSS JOIN q
-            GROUP BY t.id
+            GROUP BY t.item_id
             HAVING MIN(t.vector <=> q.vec) < {max_distance}
         ),
         top_docs AS (
-            SELECT id, min_distance
+            SELECT item_id, min_distance
             FROM doc_hits
             ORDER BY min_distance
             LIMIT {limit}
         )
         SELECT
-            t.id,
+            t.item_id,
             t.chunk_id,
             t.title,
             t.content,
@@ -46,9 +46,9 @@ def document_search(query_text: str, topic: str, format: str, limit: int = 5):
             (t.vector <=> q.vec)  AS distance,
             td.min_distance       AS doc_distance
         FROM {pgscheme}.{topic} AS t
-        JOIN top_docs td USING (id)
+        JOIN top_docs td USING (item_id)
         CROSS JOIN q
-        ORDER BY td.min_distance, t.id, t.chunk_id;
+        ORDER BY td.min_distance, t.item_id, t.chunk_id;
         """
 
     res = db.fetch_all(sql)

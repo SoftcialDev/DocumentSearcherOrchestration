@@ -7,5 +7,5 @@ output "fqdn" {
 }
 
 output "url" {
-  value = "https://${azurerm_container_app.this.ingress[0].fqdn}"
+  value = "https://${azurerm_container_app.this.ingress[0].fqdn}/"
 }

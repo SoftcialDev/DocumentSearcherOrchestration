@@ -1,16 +1,16 @@
-from fastapi import FastAPI, APIRouter, UploadFile, Request, File, Form, Query
+from fastapi import FastAPI, APIRouter, UploadFile, Request, HTTPException, status, File, Form, Query, Depends, Header
 from fastapi.responses import JSONResponse, PlainTextResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from orchestration.entrypoint import manual_refresh, file_refresh
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
+from pathlib import Path
+from modules.authenticators import verify_entra_token, get_entra_token
 import api.sources as api_sources
 import api.topics as api_topics
-import modules.sources as sources
 import modules.search as search
-from pathlib import Path
-import re, logging, threading, shutil, asyncio, os, json
+import re, threading, os, json
 
 load_dotenv()
 
@@ -20,18 +20,29 @@ RESERVED_TABLES = ["sources", "topics", "manifests"]
 UPLOAD_DIR = Path("/tmp/uploads")
 BASE_DIR = Path(__file__).resolve().parent.parent.parent  # repo/backend/main.py -> repo/
 FRONTEND_BUILD = BASE_DIR / "document-searcher-frontend" / "build"
+CLIENTS = {
+    "demo-client": {"secret": "demo-secret", "scopes": {"read", "write"}},
+}
+
+##################
+# Authentication #
+#################
+@api.post("/oauth/token")
+async def token():
+    return get_entra_token()
+
 
 ####################
 # Topics endpoints #
 ####################
 @api.get("/list-topics")
-async def list_topics():
+async def list_topics(user=Depends(verify_entra_token())):
     raw = api_topics.list_topics()
     return JSONResponse(content=raw, status_code=200)
 
 
 @api.post("/create-topic")
-async def create_topic(req: Request):
+async def create_topic(req: Request, user=Depends(verify_entra_token())):
     try:
         data = await req.json()
     except Exception:
@@ -63,7 +74,7 @@ async def create_topic(req: Request):
     
 
 @api.patch("/rename-topic")
-async def rename_topic(req: Request):
+async def rename_topic(req: Request, user=Depends(verify_entra_token())):
     try:
         data = await req.json()
     except Exception:
@@ -96,7 +107,7 @@ async def rename_topic(req: Request):
     
 
 @api.delete("/delete-topic")
-async def delete_topic(req: Request):
+async def delete_topic(req: Request, user=Depends(verify_entra_token())):
     try:
         data = await req.json()
     except Exception:
@@ -123,13 +134,13 @@ async def delete_topic(req: Request):
 # Sources endpoints #
 #####################
 @api.get("/list-sources")
-async def list_sources(req: Request):
+async def list_sources(req: Request, user=Depends(verify_entra_token())):
     topic = req.query_params.get("topic")
     return api_sources.list_sources(topic)
 
 
 @api.post("/add-source")
-async def add_source(req: Request):
+async def add_source(req: Request, user=Depends(verify_entra_token())):
     try:
         data = await req.json()
     except Exception:
@@ -183,7 +194,7 @@ async def add_source(req: Request):
     return {"status": "success", "message": f"{len(values)} source(s) added/kept"}
 
 @api.delete("/remove-source")
-async def remove_source(req: Request):
+async def remove_source(req: Request, user=Depends(verify_entra_token())):
     try:
         data = await req.json()
     except Exception:
@@ -216,7 +227,7 @@ async def remove_source(req: Request):
     
 
 @api.patch("/update-source")
-async def update_source(req: Request):
+async def update_source(req: Request, user=Depends(verify_entra_token())):
     try:
         data = await req.json()
     except Exception:
@@ -239,7 +250,11 @@ async def update_source(req: Request):
         return JSONResponse({"status": "error", "message": "Could not update source"}, status_code=500)
 
 @api.post("/upload-source")
-async def upload_source(topic: str = Form(...), file: UploadFile = File(...)):
+async def upload_source(
+        topic: str = Form(...), 
+        file: UploadFile = File(...), 
+        user=Depends(verify_entra_token())
+    ):
     UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     safe_name = re.sub(r'[^a-zA-Z0-9._-]+', '_', file.filename)
     dest = UPLOAD_DIR / safe_name
@@ -263,7 +278,7 @@ async def upload_source(topic: str = Form(...), file: UploadFile = File(...)):
 # Refresh #
 ###########
 @api.patch("/refresh-topic")
-async def refresh_source(req: Request):
+async def refresh_source(req: Request, user=Depends(verify_entra_token())):
     try:
         data = await req.json()
     except Exception:
@@ -280,7 +295,7 @@ async def refresh_source(req: Request):
 # Data Sources collection #
 ###########################
 @api.get("/search/documents")
-async def documents_seach(req: Request):
+async def documents_seach(req: Request, user=Depends(verify_entra_token())):
     query = req.query_params.get("query")
     topic_list = req.query_params.get("topic")
     format = req.query_params.get("pages", "json")
@@ -301,7 +316,7 @@ async def documents_seach(req: Request):
     return result
 
 @api.get("/search/sinalevi")
-async def sinalevi_scrapper_search(req: Request):
+async def sinalevi_scrapper_search(req: Request, user=Depends(verify_entra_token())):
     query = req.query_params.get("query")
     pages = req.query_params.get("pages")
     format = req.query_params.get("format", "json")

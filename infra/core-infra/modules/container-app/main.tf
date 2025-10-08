@@ -10,8 +10,18 @@ resource "azurerm_container_app" "this" {
   container_app_environment_id = azurerm_container_app_environment.this.id
   revision_mode                = "Single"
 
+  secret {
+    name  = "acr-pwd"
+    value = var.registry_password
+  }
+  registry {
+    server               = var.registry_server
+    username             = var.registry_username
+    password_secret_name = "acr-pwd"
+  }
+
   ingress {
-    external_enabled = true      # must be true for a public URL
+    external_enabled = true
     target_port      = var.target_port
     transport        = "auto"
 
@@ -27,7 +37,7 @@ resource "azurerm_container_app" "this" {
 
     container {
       name   = "app"
-      image  = "docsearchacr.azurecr.io/documentsearcher:latest"
+      image  = var.image
       cpu    = var.cpu
       memory = var.memory
 

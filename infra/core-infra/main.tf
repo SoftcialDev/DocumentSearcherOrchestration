@@ -23,7 +23,10 @@ module "network" {
 module "aad_app" {
   source        = "./modules/aad_app"
   display_name  = var.app_display_name
-  redirect_uris = var.redirect_uris
+  redirect_uris = concat(
+    var.redirect_uris,
+    [ module.container_app.url ]
+  )
   logout_url    = var.logout_url
 }
 
@@ -40,24 +43,24 @@ module "container_app" {
   registry_password = var.acr_admin_password
 
   # Use your existing all-in-one image + serving port
-  image       = "docsearchacr.azurecr.io/documentsearcher:latest"
-  target_port = 3000 
+  image       = var.acr_image
+  target_port = 5000 
 
   # Optional: runtime sizing
   cpu    = 2.0
   memory = "4Gi"
 
   # Optional: env vars (example with Postgres)
-  env = {
+  /*env = {
     PGHOST    = module.postgres.postgres_fqdn
     PGDATABASE= module.postgres.database_name
     PGUSER    = var.postgres_admin_username
     PGPASSWORD= var.postgres_admin_password
     PGSSLMODE = "require"
-  }
+  }*/
 }
 
-module "postgres" {
+/*module "postgres" {
   source = "./modules/database"
   # Naming prefix and resource group for the database
   name_prefix         = var.name_prefix
@@ -75,4 +78,4 @@ module "postgres" {
   public_network_access = var.postgres_public_network_access
   # Restrict public access to specific IP ranges
   allowed_ips         = var.postgres_allowed_ips
-}
+}*/
