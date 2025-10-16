@@ -8,9 +8,20 @@ from modules.logs import write_line, write_block
 import logging, uvicorn, time
 
 load_dotenv()
-logging.basicConfig(level=logging.INFO)
-logging.getLogger("selenium").setLevel(logging.ERROR)
-logging.getLogger("urllib3").setLevel(logging.WARNING)
+logging.basicConfig(level=logging.WARNING)
+for name in [
+    "azure",                         # all Azure SDK
+    "azure.identity",                # DefaultAzureCredential, etc.
+    "azure.core.pipeline.policies",  # HTTP policies
+    "azure.core.pipeline.policies.http_logging_policy",
+    "urllib3",
+    "msal",                          # if MSAL shows up server-side
+    "selenium",
+    "urllib3"
+]:
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.WARNING)
+    logger.propagate = False
 
 if __name__ == "__main__":
     # Run a check for minimal configuration needs
@@ -25,7 +36,7 @@ if __name__ == "__main__":
     #    exit()
 
     # Check variables
-    env_error, env_warning = env_checkup()
+    """env_error, env_warning = env_checkup()
     warnings += env_warning
 
     if env_error:
@@ -33,7 +44,7 @@ if __name__ == "__main__":
         write_line(f"Unable to start process, errors detected in ENV checkup")
         write_line("---CRITICAL---")
         exit()
-
+    """
     # Checks database
     if not database_setup():
         write_line("---CRITICAL---")

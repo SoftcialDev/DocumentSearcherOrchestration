@@ -9,28 +9,6 @@ resource "azurerm_resource_group" "main-rg" {
 # so we can reference the tenant ID and object ID in later modules.
 data "azuread_client_config" "current" {}
 
-module "network" {
-  source      = "./modules/network"
-  # Prefix used by the network module for naming VNet, subnets, etc.
-  name_prefix = var.name_prefix
-  # Region to deploy the VNet and subnets
-  region      = var.region
-  # Associate this network with the resource group we just created
-  resource_group  = azurerm_resource_group.main-rg.name
-}
-
-# Call the AAD app module
-module "aad_app" {
-  source        = "./modules/aad_app"
-  display_name  = var.app_display_name
-  redirect_uris = concat(
-    var.redirect_uris,
-    [ module.container_app.url ]
-  )
-  logout_url    = var.logout_url
-}
-
-
 module "container_app" {
   source              = "./modules/container-app"
   name_prefix         = var.name_prefix
@@ -60,7 +38,87 @@ module "container_app" {
   }*/
 }
 
-/*module "postgres" {
+module "key_vault" {
+  source              = "./modules/key_vault"
+  name_prefix         = var.name_prefix
+  location            = azurerm_resource_group.main-rg.location
+  resource_group_name = azurerm_resource_group.main-rg.name
+  tenant_id           = data.azuread_client_config.current.tenant_id
+
+  # Permissions
+  rbac_enabled = true
+  role_assignments = [
+    # User owner of the KV
+    {
+      principal_id         = data.azuread_client_config.current.object_id
+      role_definition_name = "Key Vault Administrator"
+      principal_type       = "User"
+    },
+    # Resources that will use the KV
+    {
+      principal_id         = module.container_app.identity_principal_id
+      role_definition_name = "Key Vault Secrets User"
+      principal_type       = "ServicePrincipal"
+    }
+  ]
+
+  # Optional: seed secrets
+  secrets = { }
+
+  tags = var.tags
+}
+
+/*module "network" {
+  source      = "./modules/network"
+  # Prefix used by the network module for naming VNet, subnets, etc.
+  name_prefix = var.name_prefix
+  # Region to deploy the VNet and subnets
+  region      = var.region
+  # Associate this network with the resource group we just created
+  resource_group  = azurerm_resource_group.main-rg.name
+}
+
+# Call the AAD app module
+module "aad_app" {
+  source        = "./modules/aad_app"
+  display_name  = var.app_display_name
+  redirect_uris = concat(
+    var.redirect_uris,
+    [ module.container_app.url ]
+  )
+  logout_url    = var.logout_url
+}
+
+module "container_app" {
+  source              = "./modules/container-app"
+  name_prefix         = var.name_prefix
+  location            = var.region
+  resource_group_name = azurerm_resource_group.main-rg.name
+
+  # Pull from ACR created by your ACR module
+  registry_server   = var.acr_login_server
+  registry_username = var.acr_admin_username
+  registry_password = var.acr_admin_password
+
+  # Use your existing all-in-one image + serving port
+  image       = var.acr_image
+  target_port = 5000 
+
+  # Optional: runtime sizing
+  cpu    = 2.0
+  memory = "4Gi"
+
+  # Optional: env vars (example with Postgres)
+  env = {
+    PGHOST    = module.postgres.postgres_fqdn
+    PGDATABASE= module.postgres.database_name
+    PGUSER    = var.postgres_admin_username
+    PGPASSWORD= var.postgres_admin_password
+    PGSSLMODE = "require"
+  }
+}
+
+module "postgres" {
   source = "./modules/database"
   # Naming prefix and resource group for the database
   name_prefix         = var.name_prefix

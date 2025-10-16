@@ -114,14 +114,16 @@ variable "postgres_allowed_ips" {
   default     = []
 }
 
-#
-# Azure connection
-#
+####################
+# Azure connection #
+####################
 variable "subscription_id" { 
   type = string 
-  default = "af90c465-cc8e-46d8-a0eb-ee471b4313a3"
 }
 variable "tenant_id" { 
   type = string 
-  default = "a080ad22-43aa-4696-b40b-9b68b702c9f3"
 }
+
+##############
+# User Input #
+##############

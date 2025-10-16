@@ -2,6 +2,7 @@
 import { v4 as uuid } from "uuid";
 import { useMsal } from "@azure/msal-react";
 import IconButton from "../../components/IconButton";
+import { useAuth } from "../../providers/AuthProvider";
 
 interface PickerProps {
   topicName: string;
@@ -10,6 +11,7 @@ interface PickerProps {
 
 export default function SharePointFolderPicker({ topicName, onPicked }: PickerProps) {
   const { instance, accounts } = useMsal();
+  const { apiFetch } = useAuth();
 
   const handlePick = async (topic: string, items: any[]) => {
     if (!items.length) return;
@@ -32,7 +34,7 @@ export default function SharePointFolderPicker({ topicName, onPicked }: PickerPr
     };
 
     try {
-      const res = await fetch("/api/add-source", {
+      const res = await apiFetch("/api/add-source", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

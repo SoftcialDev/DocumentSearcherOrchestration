@@ -6,7 +6,8 @@ from dotenv import load_dotenv
 from orchestration.entrypoint import manual_refresh, file_refresh
 from datetime import datetime, timezone
 from pathlib import Path
-from modules.authenticators import verify_entra_token, get_entra_token
+from modules.authenticators import get_secret, verify_entra_token, get_entra_token
+from modules.licenses import require_license_api
 import api.sources as api_sources
 import api.topics as api_topics
 import modules.search as search
@@ -42,6 +43,7 @@ async def list_topics(user=Depends(verify_entra_token())):
 
 
 @api.post("/create-topic")
+@require_license_api(action="CREATE-TOPIC")
 async def create_topic(req: Request, user=Depends(verify_entra_token())):
     try:
         data = await req.json()
@@ -295,6 +297,7 @@ async def refresh_source(req: Request, user=Depends(verify_entra_token())):
 # Data Sources collection #
 ###########################
 @api.get("/search/documents")
+@require_license_api(action="QUERY")
 async def documents_seach(req: Request, user=Depends(verify_entra_token())):
     query = req.query_params.get("query")
     topic_list = req.query_params.get("topic")
@@ -316,6 +319,7 @@ async def documents_seach(req: Request, user=Depends(verify_entra_token())):
     return result
 
 @api.get("/search/sinalevi")
+@require_license_api(action="QUERY")
 async def sinalevi_scrapper_search(req: Request, user=Depends(verify_entra_token())):
     query = req.query_params.get("query")
     pages = req.query_params.get("pages")
@@ -324,6 +328,7 @@ async def sinalevi_scrapper_search(req: Request, user=Depends(verify_entra_token
     return search.sinalevi_search(query, int(pages), format)
 
 @api.get("/search/web")
+@require_license_api(action="QUERY")
 async def web_scrapper_search(req: Request):
     pass
 
@@ -336,9 +341,12 @@ def healthz():
 
 api.get("/app-config.js")
 def app_config_js():
+    MSALCLIENTID = get_secret("MSALCLIENTID")
+    MSALTENANTID = get_secret("MSALTENANTID")
+    MSALAUTHORITY = f"https://login.microsoftonline.com/{MSALTENANTID}"
     data = {
-        "msalClientId": os.getenv("MSAL_CLIENT_ID", ""),
-        "msalAuthority": os.getenv("MSAL_AUTHORITY", ""),
+        "msalClientId": MSALCLIENTID,
+        "msalAuthority": MSALAUTHORITY,
     }
     body = "window.__APP_CONFIG__ = " + json.dumps(data) + ";"
     return Response(body, media_type="application/javascript")

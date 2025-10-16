@@ -50,4 +50,8 @@ resource "azurerm_container_app" "this" {
       }
     }
   }
+
+  identity {
+    type = "SystemAssigned"
+  }
 }

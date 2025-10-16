@@ -6,6 +6,7 @@ import SourcesModal from "./SourcesModal";
 import poweredBySoftcial from "../../imgs/powered_by_softcial.png"
 import appLogo from "../../imgs/app_logo.png"
 import { useAlerts } from "../../providers/AlertsProvider"; 
+import { useAuth } from "../../providers/AuthProvider";
 
 
 interface Topic { name: string }
@@ -20,10 +21,11 @@ export default function Topics() {
   const [refreshTopic, setRefreshTopic] = useState<string | null>(null);
 
   const { push } = useAlerts();
+  const { apiFetch } = useAuth();
 
   /* ---------- fetch topics list ---------- */
   useEffect(() => {
-    fetch("/api/list-topics")
+    apiFetch("/api/list-topics")
       .then((r) => r.json())
       .then(setTopics)
       .catch((err) => console.error("Error fetching topics:", err));
@@ -40,7 +42,7 @@ export default function Topics() {
     if (!deleteTopic) return;
 
     try {
-      const res = await fetch("/api/delete-topic", {
+      const res = await apiFetch("/api/delete-topic", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ topic_name: deleteTopic }),
@@ -59,7 +61,7 @@ export default function Topics() {
     if (!refreshTopic) return;
 
     try {
-      const res = await fetch("/api/refresh-topic", {
+      const res = await apiFetch("/api/refresh-topic", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ topic: refreshTopic }),

@@ -6,6 +6,7 @@ import OneDrivePicker from "./OneDrivePicker";
 import SourcesTable from "./SourcesTable";
 import ConfirmationModal from "../../components/modals/ConfirmationModal";
 import { useAlerts } from "../../providers/AlertsProvider"; 
+import { useAuth } from "../../providers/AuthProvider";
 import IconButton from "../../components/IconButton";
 
 interface Props {
@@ -52,6 +53,7 @@ export default function SourcesModal({ topicName }: Props) {
   const close = () => { setIsOpen(false); setShowMenu(false); };
 
   const { push } = useAlerts();
+  const { apiFetch } = useAuth();
 
   const askSourceRemove = (name: string, id: string) => {
     setConfirm({ name, id });
@@ -61,7 +63,7 @@ export default function SourcesModal({ topicName }: Props) {
     if (!confirm) return;
     const { name, id } = confirm;
     try {
-      const res = await fetch("/api/remove-source", {
+      const res = await apiFetch("/api/remove-source", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -115,7 +117,7 @@ export default function SourcesModal({ topicName }: Props) {
       });
     }
 
-    fetch(`/api/list-sources?topic=${encodeURIComponent(topicName)}`)
+    apiFetch(`/api/list-sources?topic=${encodeURIComponent(topicName)}`)
       .then((r) => (r.ok ? r.json() : Promise.reject(r.statusText)))
       .then(setSources)
       .catch((e) => setError(String(e)))
@@ -153,7 +155,7 @@ export default function SourcesModal({ topicName }: Props) {
         form.append("file", file, file.name);
         form.append("topic", topicName);
 
-        const res = await fetch("/api/upload-source", {
+        const res = await apiFetch("/api/upload-source", {
           method: "POST",
           body: form,
         });
@@ -180,7 +182,7 @@ export default function SourcesModal({ topicName }: Props) {
     );
 
     try {
-      const res = await fetch("/api/update-source", {
+      const res = await apiFetch("/api/update-source", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

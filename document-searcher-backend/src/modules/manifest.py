@@ -1,12 +1,12 @@
 from modules.databases import PostgreSQLConnection
-import os 
+from modules.authenticators import get_secret
 
-PGSCHEME = os.getenv("PGSCHEME")
 
 def collect_manifest(source: str, topic: str) -> list:
     """
         Returns a manifest of the specified source
     """
+    PGSCHEME = get_secret("PGSCHEME")
     postgresql =  PostgreSQLConnection()
     query = f"SELECT * FROM {PGSCHEME}.manifests WHERE source = '{source}' AND topic = '{topic}'"
 
@@ -19,6 +19,7 @@ def upload_to_manifest(values: list[dict], source: str) -> bool:
     """
     postgresql =  PostgreSQLConnection()
     inserts = []
+    PGSCHEME = get_secret("PGSCHEME")
 
     query = f"""
         INSERT INTO {PGSCHEME}.manifests
@@ -50,6 +51,7 @@ def remove_from_manifest(values: list[str]) -> bool:
     """
     postgresql =  PostgreSQLConnection()
     deletes = []
+    PGSCHEME = get_secret("PGSCHEME")
 
     query = f"""
         DELETE FROM {PGSCHEME}.manifests

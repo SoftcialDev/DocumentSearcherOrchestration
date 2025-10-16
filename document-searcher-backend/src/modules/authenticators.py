@@ -1,34 +1,14 @@
-from modules.logs import write_block, write_line
-from fastapi import Depends, HTTPException, Request, status
+# This module usage is to collect and authenticate services within Azure
+
+from fastapi import HTTPException, Request, status
 from fastapi.security import HTTPBearer
 from jose import jwt, JWTError
-from jose.exceptions import ExpiredSignatureError
 from functools import lru_cache
-import msal, requests, os, time, httpx
+from azure.identity import DefaultAzureCredential
+from azure.keyvault.secrets import SecretClient
+import msal, requests, os, time, httpx, threading
 
 bearer_scheme = HTTPBearer(auto_error=False)
-
-# Sharepoint Authentication
-SHAREPOINT_ENTRA_SECRET_VALUE = os.getenv("SHAREPOINT_ENTRA_SECRET_VALUE")
-SHAREPOINT_ENTRA_CLIENT_ID = os.getenv("SHAREPOINT_ENTRA_CLIENT_ID")
-
-# Onedrive Authentication
-ONEDRIVE_ENTRA_SECRET_VALUE = os.getenv("ONEDRIVE_ENTRA_SECRET_VALUE")
-ONEDRIVE_ENTRA_TENANT_ID = os.getenv("ONEDRIVE_ENTRA_TENANT_ID")
-ONEDRIVE_ENTRA_CLIENT_ID = os.getenv("ONEDRIVE_ENTRA_CLIENT_ID")
-
-# Graph Authentication
-GRAPH_TOKEN_ENDPOINT = os.getenv("GRAPH_TOKEN_ENDPOINT")
-
-# Entra Auth values
-ENTRA_ID_URI = os.getenv("ENTRA_ID_URI")
-ENTRA_CLIENT_ID = os.getenv("ENTRA_CLIENT_ID")
-ENTRA_TENANT_ID = os.getenv("ENTRA_TENANT_ID")
-ENTRA_SECRET = os.getenv("ENTRA_SECRET")
-ENTRA_ISSUER = os.getenv("ENTRA_ISSUER")
-ENTRA_ALLOWED_ISSUER = {f"https://sts.windows.net/{ENTRA_TENANT_ID}/", f"https://login.microsoftonline.com/{ENTRA_TENANT_ID}/v2.0"}
-OPENID_CONFIG_URL = f"{ENTRA_ISSUER}/.well-known/openid-configuration"
-ALLOWED_AUDS = {ENTRA_CLIENT_ID, ENTRA_ID_URI}
 
 ##########################
 # Sources Authentication #
@@ -40,11 +20,13 @@ def get_sharepoint_token(logs: list):
         "Accept": "application/json"
     }
     body = {
-        "client_id": SHAREPOINT_ENTRA_CLIENT_ID,
+        "client_id": get_secret("SHAREPOINTENTRACLIENTID"),
         "scope": "https://graph.microsoft.com/.default",
-        "client_secret": SHAREPOINT_ENTRA_SECRET_VALUE,
+        "client_secret": get_secret("SHAREPOINTENTRASECRET"),
         "grant_type": "client_credentials"
     }
+    ONEDRIVEENTRATENANT = get_secret("ONEDRIVEENTRATENANT")
+    GRAPH_TOKEN_ENDPOINT = f"https://login.microsoftonline.com/{ONEDRIVEENTRATENANT}/oauth2/v2.0/token"
 
     try:
         response = requests.post(GRAPH_TOKEN_ENDPOINT, headers=headers, data=body)
@@ -59,13 +41,15 @@ def get_sharepoint_token(logs: list):
     
 def get_onedrive_token(logs: list):
 
-    AUTHORITY = f"https://login.microsoftonline.com/{ONEDRIVE_ENTRA_TENANT_ID}"
+    ONEDRIVEENTRATENANT = get_secret("ONEDRIVEENTRATENANT")
+    ONEDRIVEENTRACLIENTID = get_secret("ONEDRIVEENTRACLIENTID")
+    AUTHORITY = f"https://login.microsoftonline.com/{ONEDRIVEENTRATENANT}"
     SCOPE = ["https://graph.microsoft.com/.default"]  # Application permission scope
 
     app = msal.ConfidentialClientApplication(
-        ONEDRIVE_ENTRA_CLIENT_ID,
+        ONEDRIVEENTRACLIENTID,
         authority=AUTHORITY,
-        client_credential=ONEDRIVE_ENTRA_SECRET_VALUE
+        client_credential=get_secret("ONEDRIVEENTRASECRET")
     )
 
     result = app.acquire_token_for_client(scopes=SCOPE)
@@ -85,7 +69,8 @@ def get_onedrive_token(logs: list):
 ######################
 @lru_cache(maxsize=1)
 def _get_openid_config():
-    url = f"https://login.microsoftonline.com/{ENTRA_TENANT_ID}/v2.0/.well-known/openid-configuration"
+    MSALTENANTID = get_secret("MSALTENANTID")
+    url = f"https://login.microsoftonline.com/{MSALTENANTID}/v2.0/.well-known/openid-configuration"
     resp = httpx.get(url, timeout=10)
     resp.raise_for_status()
     return resp.json()
@@ -104,18 +89,30 @@ def _get_token_from_header(request: Request) -> str:
     return auth.split(" ", 1)[1]
 
 def get_entra_token():
+    
+    MSALCLIENTID = get_secret("MSALCLIENTID")
+    MSALTENANTID = get_secret("MSALTENANTID")
+    MSALSECRET = get_secret("MSALSECRET")
+    MSALIDURI = f"api://botid{MSALCLIENTID}"
+
     cca = msal.ConfidentialClientApplication(
-        ENTRA_CLIENT_ID,
-        authority=f"https://login.microsoftonline.com/{ENTRA_TENANT_ID}",
-        client_credential=ENTRA_SECRET,
+        MSALCLIENTID,
+        authority=f"https://login.microsoftonline.com/{MSALTENANTID}",
+        client_credential=MSALSECRET,
     )
 
-    result = cca.acquire_token_for_client(scopes=[f"{ENTRA_ID_URI}/.default"])
+    result = cca.acquire_token_for_client(scopes=[f"{MSALIDURI}/.default"])
     token = result["access_token"]
     return token 
 
 def verify_entra_token():
     def _dep(request: Request):
+        MSALTENANTID = get_secret("MSALTENANTID")
+        MSALCLIENTID =  get_secret("MSALCLIENTID")
+        MSALIDURI = f"api://botid{MSALCLIENTID}"
+        ENTRA_ALLOWED_ISSUER = {f"https://sts.windows.net/{MSALTENANTID}/", f"https://login.microsoftonline.com/{MSALTENANTID}/v2.0"}
+
+        ALLOWED_AUDS = {MSALCLIENTID, MSALIDURI}
         token = _get_token_from_header(request)
         jwks = _get_jwks()
 
@@ -146,7 +143,7 @@ def verify_entra_token():
         # tenant & issuer
         tid = claims.get("tid")
         iss = claims.get("iss")
-        if tid != ENTRA_TENANT_ID or iss not in ENTRA_ALLOWED_ISSUER:
+        if tid != MSALTENANTID or iss not in ENTRA_ALLOWED_ISSUER:
             raise HTTPException(status_code=401, detail="Invalid issuer/tenant")
 
         # audience (accept GUID or URI)
@@ -160,3 +157,43 @@ def verify_entra_token():
         return claims
 
     return _dep
+
+################
+# Secrets Auth #
+################
+class SecretStore:
+    _instance = None
+    _lock = threading.Lock()
+
+    def __new__(cls):
+        if not cls._instance:
+            with cls._lock:
+                if not cls._instance:
+                    cls._instance = super().__new__(cls)
+                    cls._instance._init()
+        return cls._instance
+
+    def _init(self):
+        self._kv_uri = os.getenv("KEY_VAULT_URI")
+        self._cred = DefaultAzureCredential()
+        self._client = SecretClient(vault_url=self._kv_uri, credential=self._cred)
+        self._cache = {}  # name -> {"v": value, "t": timestamp}
+        self._ttl = int(os.getenv("SECRETS_TTL_SECONDS", "1800"))
+        self._cache_lock = threading.Lock()
+
+    def get(self, name: str) -> str:
+        now = time.time()
+        # fetch from cache
+        with self._cache_lock:
+            item = self._cache.get(name)
+            if item and (now - item["t"] < self._ttl):
+                return item["v"]
+
+        # fetch latest from Key Vault if TTL expired
+        val = self._client.get_secret(name).value
+        with self._cache_lock:
+            self._cache[name] = {"v": val, "t": now}
+        return val
+
+def get_secret(name: str) -> str:
+    return SecretStore().get(name)

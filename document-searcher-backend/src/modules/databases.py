@@ -1,4 +1,5 @@
-from modules.logs import write_block, write_line
+from modules.logs import write_block
+from modules.authenticators import get_secret
 import psycopg, pyodbc, os
 
 class PostgreSQLConnection:
@@ -11,11 +12,11 @@ class PostgreSQLConnection:
     """
 
     def __init__(self):
-        self.pghost = os.getenv("PGHOST")
-        self.pguser = os.getenv("PGUSER")
-        self.pgpassword = os.getenv("PGPASSWORD")
-        self.pgdatabase = os.getenv("PGDATABASE")
-        self.pgport = os.getenv("PGPORT", 5432)
+        self.pghost = get_secret("PGHOST")
+        self.pguser = get_secret("PGUSER")
+        self.pgpassword = get_secret("PGPASSWORD")
+        self.pgdatabase = get_secret("PGDATABASE")
+        self.pgport = get_secret("PGPORT")
 
     def start_connection(self):
         """

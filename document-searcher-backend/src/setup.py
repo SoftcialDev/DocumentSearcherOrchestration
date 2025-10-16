@@ -1,4 +1,5 @@
 from modules.databases import PostgreSQLConnection
+from modules.authenticators import get_secret
 from modules.logs import write_line
 import psutil
 import logging
@@ -8,7 +9,7 @@ import os
 # Set up for the minimal working configuration #
 ################################################
 def database_setup() -> bool:
-    PGSCHEME = os.getenv("PGSCHEME")
+    PGSCHEME = get_secret("PGSCHEME")
     pgsql = PostgreSQLConnection()
 
     topics_query = f"""
@@ -56,23 +57,22 @@ def env_checkup() -> tuple[bool, bool]:
     warning = 0
 
     # Strictly necessary variables for vector database
-    PGHOST = os.getenv("PGHOST")
-    PGUSER = os.getenv("PGUSER")
-    PGPORT = os.getenv("PGPORT", 5432)
-    PGDATABASE = os.getenv("PGDATABASE")
-    PGSCHEME = os.getenv("PGSCHEME")
-    PGPASSWORD = os.getenv("PGPASSWORD")
+    PGHOST = get_secret("PGHOST")
+    PGUSER = get_secret("PGUSER")
+    PGPORT = get_secret("PGPORT", 5432)
+    PGDATABASE = get_secret("PGDATABASE")
+    PGSCHEME = get_secret("PGSCHEME")
+    PGPASSWORD = get_secret("PGPASSWORD")
     if not PGHOST or not PGUSER or not PGPORT or not PGDATABASE or not PGSCHEME or not PGPASSWORD:
         write_line("Vector database variables are not set, system will not be able to communicate with vectors")
         error = True
 
     # Strictly necessary variables for Sharepoint / Onedrive / Graph
-    SESV = os.getenv("SHAREPOINT_ENTRA_SECRET_VALUE")
-    SECI = os.getenv("SHAREPOINT_ENTRA_CLIENT_ID")
-    OESV = os.getenv("ONEDRIVE_ENTRA_SECRET_VALUE")
-    OETI = os.getenv("ONEDRIVE_ENTRA_TENANT_ID")
-    OECI = os.getenv("ONEDRIVE_ENTRA_CLIENT_ID")
-    GET = os.getenv("GRAPH_TOKEN_ENDPOINT")
+    SESV = get_secret("SHAREPOINTENTRASECRET")
+    SECI = get_secret("SHAREPOINTENTRACLIENTID")
+    OESV = get_secret("ONEDRIVEENTRASECRET")
+    OETI = get_secret("ONEDRIVEENTRATENANT")
+    OECI = get_secret("ONEDRIVEENTRACLIENTID")
     if not SESV or not SECI or not OESV or not OETI or not OECI or not GET:
         write_line("Microsoft services variables are not set, system will not be able to download files from sources")
         error = True

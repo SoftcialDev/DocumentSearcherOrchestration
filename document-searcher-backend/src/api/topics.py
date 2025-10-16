@@ -1,13 +1,15 @@
 from modules import databases
+from modules.authenticators import get_secret
 import os
+
+PGSCHEME = get_secret("PGSCHEME")
 
 def list_topics() -> list:
     """
     
     """
-    pgscheme = os.getenv("PGSCHEME")
     pgsql = databases.PostgreSQLConnection()
-    query = f"SELECT name FROM {pgscheme}.topics"
+    query = f"SELECT name FROM {PGSCHEME}.topics"
     result = pgsql.fetch_all(query)
     return result["rows"]
 
@@ -16,9 +18,8 @@ def create_topic(name: str) -> bool:
 
     """
     # Create the origin table
-    pgscheme = os.getenv("PGSCHEME")
     pgsql = databases.PostgreSQLConnection()
-    query = f"""CREATE TABLE {pgscheme}.{name} (
+    query = f"""CREATE TABLE {PGSCHEME}.{name} (
         item_id text,
         drive_id text,
         chunk_id integer,
@@ -32,7 +33,7 @@ def create_topic(name: str) -> bool:
 
     if result:
         # Create a record in the topics table
-        query = f"""INSERT INTO {pgscheme}.topics VALUES('{name}')"""
+        query = f"""INSERT INTO {PGSCHEME}.topics VALUES('{name}')"""
         return pgsql.execute_one(query)
 
 def rename_topic(old_name: str, new_name: str) -> bool:
@@ -40,14 +41,13 @@ def rename_topic(old_name: str, new_name: str) -> bool:
     
     """
     pgsql = databases.PostgreSQLConnection()
-    pgscheme = os.getenv("PGSCHEME")
     # Rename the origin table
-    query = f"""ALTER TABLE {pgscheme}.{old_name} RENAME TO {new_name}"""
+    query = f"""ALTER TABLE {PGSCHEME}.{old_name} RENAME TO {new_name}"""
     result = pgsql.execute_one(query)
 
     if result:
         # Update record from topics table
-        query = f"""UPDATE {pgscheme}.topics SET name = {new_name} WHERE name = '{old_name}'"""
+        query = f"""UPDATE {PGSCHEME}.topics SET name = {new_name} WHERE name = '{old_name}'"""
         return pgsql.execute_one(query)
 
 def delete_topic(name: str) -> bool:
@@ -55,26 +55,25 @@ def delete_topic(name: str) -> bool:
     
     """
     pgsql = databases.PostgreSQLConnection()
-    pgscheme = os.getenv("PGSCHEME")
     # Collect the drive_id references
-    drive_ids_query = f"""SELECT DISTINCT drive_id FROM {pgscheme}.{name}"""
+    drive_ids_query = f"""SELECT DISTINCT drive_id FROM {PGSCHEME}.{name}"""
     drive_ids = pgsql.fetch_all(drive_ids_query)
 
     # Remove the origin table
-    drop_query = f"""DROP TABLE {pgscheme}.{name}"""
+    drop_query = f"""DROP TABLE {PGSCHEME}.{name}"""
     drop_result = pgsql.execute_one(drop_query)
 
     if drop_result:
         # Remove record from manifests table
-        sources_query = f"""DELETE FROM {pgscheme}.manifests WHERE topic = '{name}'"""
+        sources_query = f"""DELETE FROM {PGSCHEME}.manifests WHERE topic = '{name}'"""
         sources_result = pgsql.execute_one(sources_query)
     
         # Remove record from sources table
-        manifests_query = f"""DELETE FROM {pgscheme}.sources WHERE topic = '{name}'"""
+        manifests_query = f"""DELETE FROM {PGSCHEME}.sources WHERE topic = '{name}'"""
         manifests_result = pgsql.execute_one(manifests_query)
 
         # Remove record from topics table
-        topics_query = f"""DELETE FROM {pgscheme}.topics WHERE name = '{name}'"""
+        topics_query = f"""DELETE FROM {PGSCHEME}.topics WHERE name = '{name}'"""
         topics_result = pgsql.execute_one(topics_query)
 
         return topics_result and manifests_result and sources_result

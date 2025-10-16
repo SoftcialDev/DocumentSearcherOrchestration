@@ -1,8 +1,9 @@
 from modules import databases
 from modules.logs import write_line
+from modules.authenticators import get_secret
 import os
 
-PGSCHEME = os.getenv("PGSCHEME")
+PGSCHEME = get_secret("PGSCHEME")
 
 def list_sources(topic: str):
     """

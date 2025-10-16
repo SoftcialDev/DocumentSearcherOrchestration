@@ -1,5 +1,6 @@
 from modules.databases import PostgreSQLConnection
 from model_registry import get_model
+from modules.authenticators import get_secret
 from modules.scrappers import SinaleviScrapper
 from datetime import datetime, timedelta, timezone
 import os
@@ -8,7 +9,7 @@ def document_search(query_text: str, topic: str, format: str, limit: int = 5):
     db = PostgreSQLConnection()
     model = get_model()
     q_emb = model.encode([query_text], normalize_embeddings=True)[0]
-    pgscheme = os.getenv("PGSCHEME")
+    pgscheme = get_secret("PGSCHEME")
     items = []
 
     # Build pgvector literal (compact & safe)

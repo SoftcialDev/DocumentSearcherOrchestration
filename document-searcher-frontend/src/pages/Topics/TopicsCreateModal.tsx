@@ -3,6 +3,7 @@ import TextBox from "../../components/TextBox";
 import Button  from "../../components/Button";
 import Modal   from "../../components/Modal";
 import { useAlerts } from "../../providers/AlertsProvider"; 
+import { useAuth } from "../../providers/AuthProvider";
 
 interface Props {
   onCreated: () => void;
@@ -16,12 +17,13 @@ export default function TopicCreateModal({ onCreated }: Props) {
   const close = () => setIsOpen(false);
 
   const { push } = useAlerts();
+  const { apiFetch } = useAuth();
 
   const handleCreate = async () => {
     if (!text.trim()) return alert("Please enter a topic name");
 
     try {
-      const res  = await fetch("/api/create-topic", {
+      const res  = await apiFetch("/api/create-topic", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ topic_name: text }),
@@ -37,7 +39,7 @@ export default function TopicCreateModal({ onCreated }: Props) {
           variant: "success",
           duration: 5000,
         })
-      } else if (data.status === "error") {
+      } else {
         setText("");
         close();
         push({

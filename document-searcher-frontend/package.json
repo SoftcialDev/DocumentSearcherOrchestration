@@ -14,6 +14,7 @@
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "clsx": "^2.1.1",
+    "jose": "^6.1.0",
     "lucide-react": "^0.535.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
