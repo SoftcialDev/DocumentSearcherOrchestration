@@ -1,0 +1,241 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/0.1.2-preview/CreateUIDefinition.MultiVm.json#",
+  "handler": "Microsoft.Azure.CreateUIDef",
+  "version": "0.1.2-preview",
+  "parameters": {
+    "basics": [
+      {
+        "name": "namePrefix",
+        "type": "Microsoft.Common.TextBox",
+        "label": "Name prefix",
+        "defaultValue": "eaisy-docs",
+        "toolTip": "Prefix used for all resource names (e.g., RG, VNet, KV, Container App, etc.).",
+        "constraints": {
+          "required": true,
+          "regex": "^[a-z0-9-]{3,30}$",
+          "validationMessage": "Use 3–30 chars: lowercase letters, numbers, and dashes."
+        }
+      },
+      {
+        "name": "location",
+        "type": "Microsoft.Common.Location",
+        "label": "Location",
+        "toolTip": "Region where resources will be deployed.",
+        "constraints": {
+          "required": true
+        }
+      }
+    ],
+    "steps": [
+      {
+        "name": "postgres",
+        "label": "PostgreSQL",
+        "elements": [
+          {
+            "name": "pgAdminUser",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Administrator username",
+            "defaultValue": "pgadmin",
+            "constraints": { "required": true }
+          },
+          {
+            "name": "pgAdminPassword",
+            "type": "Microsoft.Common.PasswordBox",
+            "label": "Administrator password",
+            "constraints": { "required": true, "regex": "^.{8,}$", "validationMessage": "Minimum 8 characters." }
+          },
+          {
+            "name": "pgDbName",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Database name",
+            "defaultValue": "appdb",
+            "constraints": { "required": true, "regex": "^[a-zA-Z0-9_]+$", "validationMessage": "Letters, numbers, and underscore only." }
+          },
+          {
+            "name": "pgVersion",
+            "type": "Microsoft.Common.DropDown",
+            "label": "PostgreSQL version",
+            "defaultValue": "15",
+            "constraints": {
+              "allowedValues": [
+                { "label": "15", "value": "15" },
+                { "label": "14", "value": "14" },
+                { "label": "13", "value": "13" },
+                { "label": "12", "value": "12" }
+              ]
+            }
+          },
+          {
+            "name": "pgVcores",
+            "type": "Microsoft.Common.Slider",
+            "label": "vCores",
+            "min": 2,
+            "max": 16,
+            "step": 2,
+            "defaultValue": 2
+          },
+          {
+            "name": "pgStorageGB",
+            "type": "Microsoft.Common.Slider",
+            "label": "Storage (GB)",
+            "min": 32,
+            "max": 1024,
+            "step": 32,
+            "defaultValue": 64
+          }
+        ]
+      },
+      {
+        "name": "entra",
+        "label": "Entra (App Registration)",
+        "elements": [
+          {
+            "name": "aadAppDisplayName",
+            "type": "Microsoft.Common.TextBox",
+            "label": "App display name",
+            "defaultValue": "[concat(parameters('namePrefix'), '-auth')]",
+            "constraints": { "required": true }
+          },
+          {
+            "name": "aadRedirectUrisRaw",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Redirect URIs (comma-separated)",
+            "defaultValue": "https://localhost:3000/signin-oidc",
+            "toolTip": "Comma-separated list of redirect URIs for your app (e.g., SPA or server callback URLs).",
+            "constraints": { "required": true }
+          },
+          {
+            "name": "aadSecretYears",
+            "type": "Microsoft.Common.DropDown",
+            "label": "Client secret lifetime (years)",
+            "defaultValue": 1,
+            "constraints": {
+              "allowedValues": [
+                { "label": "1 year", "value": 1 },
+                { "label": "2 years", "value": 2 },
+                { "label": "3 years", "value": 3 }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "container",
+        "label": "Container App",
+        "elements": [
+          {
+            "name": "cpu",
+            "type": "Microsoft.Common.DropDown",
+            "label": "CPU",
+            "defaultValue": 2.0,
+            "constraints": {
+              "allowedValues": [
+                { "label": "0.5", "value": 0.5 },
+                { "label": "1.0", "value": 1.0 },
+                { "label": "2.0", "value": 2.0 }
+              ]
+            }
+          },
+          {
+            "name": "memory",
+            "type": "Microsoft.Common.DropDown",
+            "label": "Memory",
+            "defaultValue": "4Gi",
+            "constraints": {
+              "allowedValues": [
+                { "label": "1Gi", "value": "1Gi" },
+                { "label": "2Gi", "value": "2Gi" },
+                { "label": "4Gi", "value": "4Gi" },
+                { "label": "8Gi", "value": "8Gi" }
+              ]
+            }
+          },
+          {
+            "name": "minReplicas",
+            "type": "Microsoft.Common.Slider",
+            "label": "Min replicas",
+            "min": 0,
+            "max": 5,
+            "step": 1,
+            "defaultValue": 0
+          },
+          {
+            "name": "maxReplicas",
+            "type": "Microsoft.Common.Slider",
+            "label": "Max replicas",
+            "min": 1,
+            "max": 20,
+            "step": 1,
+            "defaultValue": 3
+          },
+          {
+            "name": "appEnvRaw",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Container environment variables (JSON array)",
+            "multiline": true,
+            "defaultValue": "[\n  { \"name\": \"KV_URL\", \"value\": \"\" },\n  { \"name\": \"PG_DSN\", \"value\": \"\" }\n]",
+            "toolTip": "JSON array like [{\"name\":\"KEY\",\"value\":\"VAL\"}, ...]. Secrets should be set via Key Vault references in your template."
+          }
+        ]
+      },
+      {
+        "name": "acr",
+        "label": "Container Image (ACR)",
+        "elements": [
+          {
+            "name": "acrLoginServer",
+            "type": "Microsoft.Common.TextBox",
+            "label": "ACR login server",
+            "placeholder": "myregistry.azurecr.io",
+            "constraints": { "required": true }
+          },
+          {
+            "name": "acrUsername",
+            "type": "Microsoft.Common.TextBox",
+            "label": "ACR username",
+            "constraints": { "required": true }
+          },
+          {
+            "name": "acrPassword",
+            "type": "Microsoft.Common.PasswordBox",
+            "label": "ACR password",
+            "constraints": { "required": true }
+          },
+          {
+            "name": "acrImage",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Image (repo/name:tag)",
+            "placeholder": "myregistry.azurecr.io/repo/image:tag",
+            "constraints": { "required": true }
+          }
+        ]
+      }
+    ],
+    "outputs": {
+      "location": "[parameters('location')]",
+      "namePrefix": "[parameters('namePrefix')]",
+
+      "pgAdminUser": "[steps('postgres').pgAdminUser]",
+      "pgAdminPassword": "[steps('postgres').pgAdminPassword]",
+      "pgDbName": "[steps('postgres').pgDbName]",
+      "pgVersion": "[steps('postgres').pgVersion]",
+      "pgVcores": "[steps('postgres').pgVcores]",
+      "pgStorageGB": "[steps('postgres').pgStorageGB]",
+
+      "aadAppDisplayName": "[steps('entra').aadAppDisplayName]",
+      "aadRedirectUris": "[split(steps('entra').aadRedirectUrisRaw, ',')]",
+      "aadSecretYears": "[steps('entra').aadSecretYears]",
+
+      "cpu": "[steps('container').cpu]",
+      "memory": "[steps('container').memory]",
+      "minReplicas": "[steps('container').minReplicas]",
+      "maxReplicas": "[steps('container').maxReplicas]",
+      "appEnv": "[json(steps('container').appEnvRaw)]",
+
+      "acrLoginServer": "[steps('acr').acrLoginServer]",
+      "acrUsername": "[steps('acr').acrUsername]",
+      "acrPassword": "[steps('acr').acrPassword]",
+      "acrImage": "[steps('acr').acrImage]"
+    }
+  }
+}

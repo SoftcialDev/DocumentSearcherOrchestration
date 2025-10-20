@@ -1,0 +1,425 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-08-01/subscriptionDeploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": { "type": "string", "defaultValue": "westus" },
+    "namePrefix": { "type": "string","defaultValue": "eaisy-docs" },
+    "vnetCidr": { "type": "string","defaultValue": "10.20.0.0/16" },
+    "appsSubnetCidr": { "type": "string", "defaultValue": "10.20.1.0/24" },
+    "peSubnetCidr": { "type": "string", "defaultValue": "10.20.2.0/24" },
+    "pgAdminUser": { "type": "string", "defaultValue": "pgadmin" },
+    "pgAdminPassword": { "type": "secureString" },
+    "pgDbName": { "type": "string", "defaultValue": "appdb" },
+    "pgVersion": { "type": "string", "defaultValue": "15" },
+    "pgVcores": { "type": "int", "defaultValue": 2 },
+    "pgStorageGB": { "type": "int", "defaultValue": 64 },
+    "aadAppDisplayName": { "type": "string", "defaultValue": "[format('{0}-auth', parameters('namePrefix'))]" },
+    "aadRedirectUris": { "type": "array", "defaultValue": [ "https://localhost:3000/signin-oidc" ] },
+    "aadSecretYears": { "type": "int", "defaultValue": 1 },
+    "cpu": { "type": "number", "defaultValue": 2.0 },
+    "memory": { "type": "string", "defaultValue": "4Gi" },
+    "minReplicas": { "type": "int", "defaultValue": 0 },
+    "maxReplicas": { "type": "int", "defaultValue": 3 },
+    "appEnv": { "type": "array", "defaultValue": [] },
+    "acrLoginServer": { "type": "string" },
+    "acrUsername": { "type": "string" },
+    "acrPassword": { "type": "secureString" },
+    "acrImage": { "type": "string" }
+  },
+  "variables": {
+    "rgName": "[format('{0}-app', parameters('namePrefix'))]",
+    "vnetName": "[format('{0}-vnet', parameters('namePrefix'))]",
+    "appsSubnetName": "[format('{0}-apps', parameters('namePrefix'))]",
+    "peSubnetName": "[format('{0}-pe', parameters('namePrefix'))]",
+    "pgServerName": "[format('{0}-pg', parameters('namePrefix'))]",
+    "kvName": "[format('{0}-kv', parameters('namePrefix'))]",
+    "uamiName": "[format('{0}-deploy-id', parameters('namePrefix'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Resources/resourceGroups",
+      "apiVersion": "2021-04-01",
+      "name": "[variables('rgName')]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "appPrefix": "[parameters('namePrefix')]"
+      }
+    },
+    {
+      "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+      "apiVersion": "2023-01-31",
+      "name": "[variables('uamiName')]",
+      "location": "[parameters('location')]",
+      "resourceGroup": "[variables('rgName')]",
+      "tags": { "appPrefix": "[parameters('namePrefix')]" }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2021-04-01",
+      "name": "aad-app",
+      "resourceGroup": "[variables('rgName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {},
+          "resources": [
+            {
+              "type": "Microsoft.Resources/deploymentScripts",
+              "apiVersion": "2020-10-01",
+              "name": "create-aad-app",
+              "location": "[parameters('location')]",
+              "kind": "AzureCLI",
+              "identity": {
+                "type": "UserAssigned",
+                "userAssignedIdentities": {
+                  "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('uamiName'))]": {}
+                }
+              },
+              "properties": {
+                "azCliVersion": "2.60.0",
+                "timeout": "PT15M",
+                "environmentVariables": [
+                  { "name": "APP_NAME", "value": "[parameters('aadAppDisplayName')]" },
+                  { "name": "TENANT_ID", "value": "[subscription().tenantId]" },
+                  { "name": "REDIRECT_URIS", "value": "[join(parameters('aadRedirectUris'), ' ')]" },
+                  { "name": "SECRET_YEARS", "value": "[string(parameters('aadSecretYears'))]" }
+                ],
+                "scriptContent": "\nset -e\n\n# Create app registration\nappId=$(az ad app create \\\n  --display-name \"$APP_NAME\" \\\n  --sign-in-audience AzureADMyOrg \\\n  --web-redirect-uris $REDIRECT_URIS \\\n  --query appId -o tsv)\n\necho \"AppId: $appId\"\n\n# Ensure service principal exists (optional but common)\naz ad sp create --id \"$appId\" --only-show-errors >/dev/null 2>&1 || true\n\n# Create client secret\nsecret=$(az ad app credential reset \\\n  --id \"$appId\" \\\n  --display-name msal-secret \\\n  --years \"$SECRET_YEARS\" \\\n  --query secretText -o tsv)\n\n# Output JSON for the template\nprintf '{\"MSALCLIENTID\":\"%s\",\"MSALSECRET\":\"%s\",\"MSALTENANTID\":\"%s\"}' \"$appId\" \"$secret\" \"$TENANT_ID\" > $AZ_SCRIPTS_OUTPUT_PATH\n"
+              }
+            }
+          ],
+          "outputs": {
+            "MSALCLIENTID": {
+              "type": "string",
+              "value": "[json(concat(deployment().properties.outputsLink.outputs))['MSALCLIENTID']]"
+            },
+            "MSALSECRET": {
+              "type": "string",
+              "value": "[json(concat(deployment().properties.outputsLink.outputs))['MSALSECRET']]"
+            },
+            "MSALTENANTID": {
+              "type": "string",
+              "value": "[json(concat(deployment().properties.outputsLink.outputs))['MSALTENANTID']]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/resourceGroups', variables('rgName'))]",
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('uamiName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2021-04-01",
+      "name": "network",
+      "resourceGroup": "[variables('rgName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {},
+          "variables": {},
+          "resources": [
+            {
+              "type": "Microsoft.Network/virtualNetworks",
+              "apiVersion": "2023-04-01",
+              "name": "[variables('vnetName')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "addressSpace": {
+                  "addressPrefixes": [ "[parameters('vnetCidr')]" ]
+                },
+                "subnets": [
+                  {
+                    "name": "[variables('appsSubnetName')]",
+                    "properties": {
+                      "addressPrefix": "[parameters('appsSubnetCidr')]",
+                      "privateEndpointNetworkPolicies": "Enabled",
+                      "privateLinkServiceNetworkPolicies": "Enabled"
+                    }
+                  },
+                  {
+                    "name": "[variables('peSubnetName')]",
+                    "properties": {
+                      "addressPrefix": "[parameters('peSubnetCidr')]",
+                      "privateEndpointNetworkPolicies": "Disabled",
+                      "privateLinkServiceNetworkPolicies": "Enabled"
+                    }
+                  }
+                ]
+              },
+              "tags": {
+                "appPrefix": "[parameters('namePrefix')]"
+              }
+            }
+          ],
+          "outputs": {
+            "vnetId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
+            },
+            "appsSubnetId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('vnetName'), variables('appsSubnetName'))]"
+            },
+            "peSubnetId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('vnetName'), variables('peSubnetName'))]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/resourceGroups', variables('rgName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2021-04-01",
+      "name": "database",
+      "resourceGroup": "[variables('rgName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {},
+          "resources": [
+            {
+              "type": "Microsoft.DBforPostgreSQL/flexibleServers",
+              "apiVersion": "2023-03-01-preview",
+              "name": "[variables('pgServerName')]",
+              "location": "[parameters('location')]",
+              "sku": {
+                "name": "Standard_D2s_v3",
+                "tier": "GeneralPurpose"
+              },
+              "properties": {
+                "version": "[parameters('pgVersion')]",
+                "administratorLogin": "[parameters('pgAdminUser')]",
+                "administratorLoginPassword": "[parameters('pgAdminPassword')]",
+                "storage": {
+                  "storageSizeGB": "[parameters('pgStorageGB')]"
+                },
+                "highAvailability": { "mode": "Disabled" },
+                "backup": { "backupRetentionDays": 7, "geoRedundantBackup": "Disabled" },
+                "network": { "publicNetworkAccess": "Enabled" }
+              },
+              "tags": { "appPrefix": "[parameters('namePrefix')]" }
+            },
+            {
+              "type": "Microsoft.DBforPostgreSQL/flexibleServers/databases",
+              "apiVersion": "2023-03-01-preview",
+              "name": "[format('{0}/{1}', variables('pgServerName'), parameters('pgDbName'))]",
+              "dependsOn": [
+                "[resourceId('Microsoft.DBforPostgreSQL/flexibleServers', variables('pgServerName'))]"
+              ],
+              "properties": {}
+            }
+          ],
+          "outputs": {
+            "PGHOST": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.DBforPostgreSQL/flexibleServers', variables('pgServerName')), '2023-03-01-preview').fullyQualifiedDomainName]"
+            },
+            "PGUSER": {
+              "type": "string",
+              "value": "[parameters('pgAdminUser')]"
+            },
+            "PGPASSWORD": {
+              "type": "string",
+              "value": "[parameters('pgAdminPassword')]"
+            },
+            "PGPORT": {
+              "type": "string",
+              "value": "5432"
+            },
+            "PGDATABASE": {
+              "type": "string",
+              "value": "[parameters('pgDbName')]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/resourceGroups', variables('rgName'))]",
+        "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2021-04-01",
+      "name": "keyvault",
+      "resourceGroup": "[variables('rgName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {},
+          "resources": [
+            {
+              "type": "Microsoft.KeyVault/vaults",
+              "apiVersion": "2023-07-01",
+              "name": "[variables('kvName')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "tenantId": "[subscription().tenantId]",
+                "sku": { "name": "standard", "family": "A" },
+                "enableRbacAuthorization": true,
+                "softDeleteRetentionInDays": 90,
+                "enabledForTemplateDeployment": true,
+                "publicNetworkAccess": "Enabled"
+              },
+              "tags": { "appPrefix": "[parameters('namePrefix')]" }
+            }
+          ],
+          "outputs": {
+            "KV_URL": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.KeyVault/vaults', variables('kvName')), '2023-07-01').properties.vaultUri]"
+            },
+            "KV_NAME": {
+              "type": "string",
+              "value": "[variables('kvName')]"
+            },
+            "KV_RESOURCE_ID": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.KeyVault/vaults', variables('kvName'))]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/resourceGroups', variables('rgName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2021-04-01",
+      "name": "containerapps",
+      "resourceGroup": "[variables('rgName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {},
+          "resources": [
+            {
+              "type": "Microsoft.OperationalInsights/workspaces",
+              "apiVersion": "2022-10-01",
+              "name": "[variables('laName')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "retentionInDays": 30
+              },
+              "sku": { "name": "PerGB2018" },
+              "tags": { "appPrefix": "[parameters('namePrefix')]" }
+            },
+            {
+              "type": "Microsoft.App/managedEnvironments",
+              "apiVersion": "2024-02-02-preview",
+              "name": "[variables('caeName')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "appLogsConfiguration": {
+                  "logAnalyticsConfiguration": {
+                    "customerId": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', variables('laName')), '2022-10-01').customerId]",
+                    "sharedKey": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces', variables('laName')), '2020-08-01').primarySharedKey]"
+                  }
+                }
+              },
+              "tags": { "appPrefix": "[parameters('namePrefix')]" },
+              "dependsOn": [
+                "[resourceId('Microsoft.OperationalInsights/workspaces', variables('laName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.App/containerApps",
+              "apiVersion": "2024-02-02-preview",
+              "name": "[variables('caName')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "managedEnvironmentId": "[resourceId('Microsoft.App/managedEnvironments', variables('caeName'))]",
+                "configuration": {
+                  "ingress": {
+                    "external": true,
+                    "targetPort": 8080
+                  },
+                  "registries": [
+                    {
+                      "server": "[parameters('acrLoginServer')]",
+                      "username": "[parameters('acrUsername')]",
+                      "passwordSecretRef": "acr-pwd"
+                    }
+                  ],
+                  "secrets": [
+                    { "name": "acr-pwd", "value": "[parameters('acrPassword')]" }
+                  ]
+                },
+                "template": {
+                  "containers": [
+                    {
+                      "name": "app",
+                      "image": "[parameters('acrImage')]",
+                      "resources": {
+                        "cpu": "[parameters('cpu')]",
+                        "memory": "[parameters('memory')]"
+                      },
+                      "env": "[parameters('appEnv')]"
+                    }
+                  ],
+                  "scale": {
+                    "minReplicas": "[parameters('minReplicas')]",
+                    "maxReplicas": "[parameters('maxReplicas')]"
+                  }
+                }
+              },
+              "tags": { "appPrefix": "[parameters('namePrefix')]" },
+              "dependsOn": [
+                "[resourceId('Microsoft.App/managedEnvironments', variables('caeName'))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "CONTAINER_APP_FQDN": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.App/containerApps', variables('caName')), '2024-02-02-preview').properties.configuration.ingress.fqdn]"
+            },
+            "CONTAINER_APP_URL": {
+              "type": "string",
+              "value": "[format('https://{0}', reference(resourceId('Microsoft.App/containerApps', variables('caName')), '2024-02-02-preview').properties.configuration.ingress.fqdn)]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/resourceGroups', variables('rgName'))]"
+      ]
+    }
+  ],
+  "outputs": {
+    "resourceGroupName": { "type": "string","value": "[variables('rgName')]" },
+    "vnetName": { "type": "string","value": "[variables('vnetName')]" },
+    "appsSubnetName": { "type": "string","value": "[variables('appsSubnetName')]" },
+    "peSubnetName": { "type": "string", "value": "[variables('peSubnetName')]" },
+    "PGHOST": { "type": "string", "value": "[reference('database').outputs.PGHOST.value]" },
+    "PGUSER": { "type": "string", "value": "[reference('database').outputs.PGUSER.value]" },
+    "PGPASSWORD": { "type": "string", "value": "[reference('database').outputs.PGPASSWORD.value]" },
+    "PGPORT": { "type": "string", "value": "[reference('database').outputs.PGPORT.value]" },
+    "PGDATABASE": { "type": "string", "value": "[reference('database').outputs.PGDATABASE.value]" },
+    "KV_URL": { "type": "string", "value": "[reference('keyvault').outputs.KV_URL.value]" },
+    "KV_NAME": { "type": "string", "value": "[reference('keyvault').outputs.KV_NAME.value]" },
+    "KV_RESOURCE_ID": { "type": "string", "value": "[reference('keyvault').outputs.KV_RESOURCE_ID.value]" }
+  }
+}

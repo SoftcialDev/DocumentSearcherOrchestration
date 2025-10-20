@@ -21,3 +21,4 @@ secrets.auto.tfvars
 # General
 archived/
 build/
+*.zip
