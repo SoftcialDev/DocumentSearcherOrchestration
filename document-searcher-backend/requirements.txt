@@ -17,3 +17,6 @@ selenium
 python-multipart
 python-jose[cryptography]
 cachetools
+azure-identity
+azure-keyvault-secrets
+httpx

@@ -48,6 +48,44 @@ def database_setup() -> bool:
     """
     if not pgsql.execute_one(manifest_query):
         return False
+    
+    connected_accounts_query = """
+        CREATE TABLE IF NOT EXISTS public.connected_accounts (
+            user_id VARCHAR(255) NOT NULL,
+            source VARCHAR(255) NOT NULL,
+            access_token VARCHAR(255) NOT NULL,
+            refresh_token VARCHAR(255) NOT NULL,
+            expires_at BIGINT NOT NULL,
+            PRIMARY KEY (user_id, source)
+        );
+    """
+    if not pgsql.execute_one(connected_accounts_query):
+        return False
+    
+    source_accounts_query = """
+        CREATE TABLE IF NOT EXISTS public.sources_accounts (
+            -- FK to public.sources PK (topic, id)
+            topic           TEXT        NOT NULL,
+            id              TEXT        NOT NULL,
+
+            -- FK to public.connected_accounts PK (user_id, source)
+            user_id         VARCHAR(255) NOT NULL,
+            account_source  VARCHAR(255) NOT NULL,   -- e.g., 'GoogleDrive', 'OneDrive', etc.
+
+            -- Composite PK across both parents
+            PRIMARY KEY (topic, id, user_id, account_source),
+
+            FOREIGN KEY (topic, id)
+                REFERENCES public.sources (topic, id)
+                ON DELETE CASCADE,
+
+            FOREIGN KEY (user_id, account_source)
+                REFERENCES public.connected_accounts (user_id, source)
+                ON DELETE CASCADE
+        );
+    """
+    if not pgsql.execute_one(source_accounts_query):
+        return False
 
     return True
 

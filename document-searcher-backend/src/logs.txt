@@ -1,0 +1,735 @@
+Starting process with no issues
+No topics scheduled at 1430
+Waiting 1177.328078 for next iteration
+No topics scheduled at 1500
+Waiting 1799.070624 for next iteration
+No topics scheduled at 1530
+Waiting 1797.374806 for next iteration
+No topics scheduled at 1600
+Waiting 1799.067816 for next iteration
+No topics scheduled at 1630
+Waiting 1793.59287 for next iteration
+Starting process with no issues
+No topics scheduled at 1630
+Waiting 98.794796 for next iteration
+Starting orchestration with 7 sources at 1700
+
+2025-11-06T23:00:24.383949+00:00
+Reading manifest...
+Manifest loaded
+Reading remote content metadata...
+Remote metadata loaded
+Downloading differences
+Downloaded 0 files
+No files detected, aborting...
+Registering changes to manifest...
+Manifest updated
+Cleaning local information...
+Local server cleaned
+
+
+2025-11-06T23:00:24.410751+00:00
+Reading manifest...
+Manifest loaded
+Reading remote content metadata...
+Remote metadata loaded
+Downloading differences
+Downloaded 0 files
+No files detected, aborting...
+Registering changes to manifest...
+Manifest updated
+Cleaning local information...
+Local server cleaned
+
+
+2025-11-06T23:00:24.415066+00:00
+Reading manifest...
+Manifest loaded
+Reading remote content metadata...
+Remote metadata loaded
+Downloading differences
+Downloaded 0 files
+No files detected, aborting...
+Registering changes to manifest...
+Manifest updated
+Cleaning local information...
+Local server cleaned
+
+
+2025-11-06T23:00:27.571154+00:00
+Reading manifest...
+Manifest loaded
+Reading remote content metadata...
+Remote metadata loaded
+Downloading differences
+Downloaded 0 files
+No files detected, aborting...
+Registering changes to manifest...
+Manifest updated
+Cleaning local information...
+Local server cleaned
+
+
+2025-11-06T23:00:27.799127+00:00
+Reading manifest...
+Manifest loaded
+Reading remote content metadata...
+Remote metadata loaded
+Downloading differences
+Downloaded 0 files
+No files detected, aborting...
+Registering changes to manifest...
+Manifest updated
+Cleaning local information...
+Local server cleaned
+
+
+2025-11-06T23:00:27.851111+00:00
+Reading manifest...
+Manifest loaded
+Reading remote content metadata...
+Remote metadata loaded
+Downloading differences
+Downloaded 0 files
+No files detected, aborting...
+Registering changes to manifest...
+Manifest updated
+Cleaning local information...
+Local server cleaned
+
+
+2025-11-06T23:00:31.005135+00:00
+Reading manifest...
+Manifest loaded
+Reading remote content metadata...
+Remote metadata loaded
+Downloading differences
+Downloaded 0 files
+No files detected, aborting...
+Registering changes to manifest...
+Manifest updated
+Cleaning local information...
+Local server cleaned
+
+Waiting 1767.9302 for next iteration
+Waiting -18171.810142 for next iteration
+Waiting -11505.349352 for next iteration
+Waiting -18616.052973 for next iteration
+Waiting 1172.802969 for next iteration
+No topics scheduled at 830
+Waiting 1783.150473 for next iteration
+No topics scheduled at 900
+Waiting 1799.053398 for next iteration
+No topics scheduled at 930
+Waiting 1789.556307 for next iteration
+No topics scheduled at 1000
+Waiting 1798.501385 for next iteration
+No topics scheduled at 1030
+Waiting 1797.670751 for next iteration
+No topics scheduled at 1100
+Waiting 1794.340287 for next iteration
+Starting process with no issues
+No topics scheduled at 1430
+Waiting 994.936302 for next iteration
+No topics scheduled at 1500
+Waiting 1799.042878 for next iteration
+Starting process with no issues
+No topics scheduled at 1530
+Waiting 624.417912 for next iteration
+No topics scheduled at 1600
+Waiting 1799.037233 for next iteration
+Starting process with no issues
+No topics scheduled at 1630
+Waiting 972.29736 for next iteration
+Starting orchestration with 7 sources at 1700
+
+[2025-11-07 17:00:28]
+Reading manifest...
+Manifest loaded
+Reading remote content metadata...
+Remote metadata loaded
+Downloading differences
+Downloaded 0 files
+No files detected, aborting...
+Registering changes to manifest...
+Manifest updated
+Cleaning local information...
+Local server cleaned
+
+
+[2025-11-07 17:00:28]
+Reading manifest...
+Manifest loaded
+Reading remote content metadata...
+Remote metadata loaded
+Downloading differences
+Downloaded 0 files
+No files detected, aborting...
+Registering changes to manifest...
+Manifest updated
+Cleaning local information...
+Local server cleaned
+
+
+[2025-11-07 17:00:29]
+Reading manifest...
+Manifest loaded
+Reading remote content metadata...
+Remote metadata loaded
+Downloading differences
+Downloaded 0 files
+No files detected, aborting...
+Registering changes to manifest...
+Manifest updated
+Cleaning local information...
+Local server cleaned
+
+
+[2025-11-07 17:00:31]
+Reading manifest...
+Manifest loaded
+Reading remote content metadata...
+Remote metadata loaded
+Downloading differences
+Downloaded 0 files
+No files detected, aborting...
+Registering changes to manifest...
+Manifest updated
+Cleaning local information...
+Local server cleaned
+
+
+[2025-11-07 17:00:31]
+Reading manifest...
+Manifest loaded
+Reading remote content metadata...
+Remote metadata loaded
+Downloading differences
+Downloaded 0 files
+No files detected, aborting...
+Registering changes to manifest...
+Manifest updated
+Cleaning local information...
+Local server cleaned
+
+
+[2025-11-07 17:00:32]
+Reading manifest...
+Manifest loaded
+Reading remote content metadata...
+Remote metadata loaded
+Downloading differences
+Downloaded 0 files
+No files detected, aborting...
+Registering changes to manifest...
+Manifest updated
+Cleaning local information...
+Local server cleaned
+
+
+[2025-11-07 17:00:35]
+Reading manifest...
+Manifest loaded
+Reading remote content metadata...
+Remote metadata loaded
+Downloading differences
+Downloaded 0 files
+No files detected, aborting...
+Registering changes to manifest...
+Manifest updated
+Cleaning local information...
+Local server cleaned
+
+Waiting 1763.796211 for next iteration
+Starting orchestration with 1 sources at 1730
+
+[2025-11-07 17:30:32]
+Reading manifest...
+Manifest loaded
+Reading remote content metadata...
+Remote metadata loaded
+Downloading differences
+Downloaded 0 files
+No files detected, aborting...
+Registering changes to manifest...
+Manifest updated
+Cleaning local information...
+Local server cleaned
+
+Waiting 1766.91936 for next iteration
+No topics scheduled at 1800
+Waiting 1798.382683 for next iteration
+No topics scheduled at 1830
+Waiting 1793.781189 for next iteration
+No topics scheduled at 1900
+Waiting 1799.041048 for next iteration
+Waiting -21444.548383 for next iteration
+No topics scheduled at 900
+Waiting 148.03159 for next iteration
+No topics scheduled at 1000
+Waiting 123.179074 for next iteration
+No topics scheduled at 1030
+Waiting 1799.045623 for next iteration
+No topics scheduled at 1100
+Waiting 1793.579642 for next iteration
+Waiting -21646.314175 for next iteration
+No topics scheduled at 930
+Waiting 1746.136773 for next iteration
+No topics scheduled at 1030
+Waiting 1769.223508 for next iteration
+Waiting 1439.462131 for next iteration
+No topics scheduled at 2130
+Waiting 96.642317 for next iteration
+No topics scheduled at 2200
+Waiting 1799.018623 for next iteration
+No topics scheduled at 2230
+Waiting 1797.734479 for next iteration
+No topics scheduled at 2300
+Waiting 1798.003708 for next iteration
+No topics scheduled at 2330
+Waiting 1789.268443 for next iteration
+[2025-11-09 23:58:23]Starting process with no issues
+[2025-11-09 23:58:24]No topics scheduled at 2330
+[2025-11-09 23:58:24]Waiting 95.790111 for next iteration
+[2025-11-10 00:00:00]No topics scheduled at 0
+[2025-11-10 00:00:00]Waiting 1799.041069 for next iteration
+[2025-11-10 00:30:02]No topics scheduled at 30
+[2025-11-10 00:30:02]Waiting 1797.856894 for next iteration
+[2025-11-10 01:00:07]No topics scheduled at 100
+[2025-11-10 01:00:07]Waiting 1792.133842 for next iteration
+[2025-11-10 01:04:59]Starting process with no issues
+[2025-11-10 01:05:00]No topics scheduled at 100
+[2025-11-10 01:05:00]Waiting 1499.865332 for next iteration
+[2025-11-10 01:06:03]
+            DELETE FROM public.sources WHERE topic = 'financials' AND id = ',,1WvFUhtR9fsjUP2bVc4h5NdqzXikLL8P8'
+        
+[2025-11-10 01:06:04]
+            DELETE FROM public.financials WHERE drive_id = '1WvFUhtR9fsjUP2bVc4h5NdqzXikLL8P8'
+        
+[2025-11-10 01:06:05]
+            DELETE FROM public.manifests WHERE drive_id = '1WvFUhtR9fsjUP2bVc4h5NdqzXikLL8P8' AND topic = 'financials'
+        
+[2025-11-10 01:13:34]
+            DELETE FROM public.sources WHERE topic = 'financials' AND id = '1BTMQtyOjCFCm3M74t_QTUk_MgayG2qtV'
+        
+[2025-11-10 01:13:35]
+            DELETE FROM public.financials WHERE drive_id = '1BTMQtyOjCFCm3M74t_QTUk_MgayG2qtV'
+        
+[2025-11-10 01:13:36]
+            DELETE FROM public.manifests WHERE drive_id = '1BTMQtyOjCFCm3M74t_QTUk_MgayG2qtV' AND topic = 'financials'
+        
+[2025-11-10 01:13:39]
+            DELETE FROM public.sources WHERE topic = 'financials' AND id = '1GAxuCwYxh6M29-I2K1GO9zMfwPqP7kjA'
+        
+[2025-11-10 01:13:40]
+            DELETE FROM public.financials WHERE drive_id = '1GAxuCwYxh6M29-I2K1GO9zMfwPqP7kjA'
+        
+[2025-11-10 01:13:41]
+            DELETE FROM public.manifests WHERE drive_id = '1GAxuCwYxh6M29-I2K1GO9zMfwPqP7kjA' AND topic = 'financials'
+        
+[2025-11-10 01:30:00]No topics scheduled at 130
+[2025-11-10 01:30:00]Waiting 1799.009099 for next iteration
+[2025-11-10 08:19:24]Waiting 635.344162 for next iteration
+[2025-11-10 08:39:33]Starting process with no issues
+[2025-11-10 08:39:34]No topics scheduled at 830
+[2025-11-10 08:39:34]Waiting 1225.234525 for next iteration
+[2025-11-10 15:05:44]Starting process with no issues
+[2025-11-10 15:05:45]No topics scheduled at 1500
+[2025-11-10 15:05:45]Waiting 1454.653025 for next iteration
+[2025-11-10 15:30:00]No topics scheduled at 1530
+[2025-11-10 15:30:00]Waiting 1799.013332 for next iteration
+[2025-11-10 16:00:02]No topics scheduled at 1600
+[2025-11-10 16:00:02]Waiting 1797.794929 for next iteration
+[2025-11-10 16:30:01]No topics scheduled at 1630
+[2025-11-10 16:30:01]Waiting 1798.987283 for next iteration
+[2025-11-10 17:00:05]Starting orchestration with 7 sources at 1700
+
+[2025-11-10 17:00:29]
+Reading manifest...
+Manifest loaded
+Reading remote content metadata...
+Remote metadata loaded
+Downloading differences
+Downloaded 0 files
+No files detected, aborting...
+Registering changes to manifest...
+Manifest updated
+Cleaning local information...
+Local server cleaned
+
+
+[2025-11-10 17:00:29]
+Reading manifest...
+Manifest loaded
+Reading remote content metadata...
+Remote metadata loaded
+Downloading differences
+Downloaded 0 files
+No files detected, aborting...
+Registering changes to manifest...
+Manifest updated
+Cleaning local information...
+Local server cleaned
+
+
+[2025-11-10 17:00:30]
+Reading manifest...
+Manifest loaded
+Reading remote content metadata...
+Remote metadata loaded
+Downloading differences
+Downloaded 0 files
+No files detected, aborting...
+Registering changes to manifest...
+Manifest updated
+Cleaning local information...
+Local server cleaned
+
+
+[2025-11-10 17:00:33]
+Reading manifest...
+Manifest loaded
+Reading remote content metadata...
+Remote metadata loaded
+Downloading differences
+Downloaded 0 files
+No files detected, aborting...
+Registering changes to manifest...
+Manifest updated
+Cleaning local information...
+Local server cleaned
+
+
+[2025-11-10 17:00:33]
+Reading manifest...
+Manifest loaded
+Reading remote content metadata...
+Remote metadata loaded
+Downloading differences
+Downloaded 0 files
+No files detected, aborting...
+Registering changes to manifest...
+Manifest updated
+Cleaning local information...
+Local server cleaned
+
+
+[2025-11-10 17:00:33]
+Reading manifest...
+Manifest loaded
+Reading remote content metadata...
+Remote metadata loaded
+Downloading differences
+Downloaded 0 files
+No files detected, aborting...
+Registering changes to manifest...
+Manifest updated
+Cleaning local information...
+Local server cleaned
+
+
+[2025-11-10 17:00:36]
+Reading manifest...
+Manifest loaded
+Reading remote content metadata...
+Remote metadata loaded
+Downloading differences
+Downloaded 0 files
+No files detected, aborting...
+Registering changes to manifest...
+Manifest updated
+Cleaning local information...
+Local server cleaned
+
+[2025-11-10 17:00:37]Waiting 1762.314107 for next iteration
+[2025-11-10 22:25:09]No topics scheduled at 2200
+[2025-11-10 22:25:09]Waiting 290.94678 for next iteration
+[2025-11-10 22:30:02]No topics scheduled at 2230
+[2025-11-10 22:30:02]Waiting 1797.496193 for next iteration
+[2025-11-10 23:00:02]No topics scheduled at 2300
+[2025-11-10 23:00:02]Waiting 1797.792976 for next iteration
+[2025-11-10 23:30:01]No topics scheduled at 2330
+[2025-11-10 23:30:01]Waiting 1798.558336 for next iteration
+[2025-11-11 00:00:09]No topics scheduled at 0
+[2025-11-11 00:00:09]Waiting 1790.84392 for next iteration
+[2025-11-11 00:30:01]No topics scheduled at 30
+[2025-11-11 00:30:01]Waiting 1798.339602 for next iteration
+[2025-11-11 01:00:01]No topics scheduled at 100
+[2025-11-11 01:00:01]Waiting 1798.092964 for next iteration
+
+[2025-11-11 01:21:33]
+---ERROR---
+query parameters should be a sequence or a mapping, got set
+---ERROR---
+
+
+[2025-11-11 01:26:32]
+---ERROR---
+query parameters should be a sequence or a mapping, got set
+---ERROR---
+
+[2025-11-11 01:30:03]No topics scheduled at 130
+[2025-11-11 01:30:03]Waiting 1796.058682 for next iteration
+[2025-11-11 02:00:01]No topics scheduled at 200
+[2025-11-11 02:00:01]Waiting 1798.329637 for next iteration
+[2025-11-11 02:30:06]No topics scheduled at 230
+[2025-11-11 02:30:06]Waiting 1793.356113 for next iteration
+[2025-11-11 03:00:01]No topics scheduled at 300
+[2025-11-11 03:00:01]Waiting 1798.528317 for next iteration
+[2025-11-11 03:30:01]No topics scheduled at 330
+[2025-11-11 03:30:01]Waiting 1798.089136 for next iteration
+[2025-11-11 04:00:05]No topics scheduled at 400
+[2025-11-11 04:00:05]Waiting 1794.193238 for next iteration
+[2025-11-11 04:30:00]No topics scheduled at 430
+[2025-11-11 04:30:00]Waiting 1799.073288 for next iteration
+[2025-11-11 05:00:05]No topics scheduled at 500
+[2025-11-11 05:00:05]Waiting 1794.242689 for next iteration
+[2025-11-11 05:30:00]No topics scheduled at 530
+[2025-11-11 05:30:00]Waiting 1799.055234 for next iteration
+[2025-11-11 06:00:02]No topics scheduled at 600
+[2025-11-11 06:00:02]Waiting 1797.789706 for next iteration
+[2025-11-11 06:30:05]No topics scheduled at 630
+[2025-11-11 06:30:05]Waiting 1794.474242 for next iteration
+[2025-11-11 07:00:01]No topics scheduled at 700
+[2025-11-11 07:00:01]Waiting 1798.4904 for next iteration
+[2025-11-11 07:30:01]No topics scheduled at 730
+[2025-11-11 07:30:01]Waiting 1798.002276 for next iteration
+[2025-11-11 08:00:00]No topics scheduled at 800
+[2025-11-11 08:00:00]Waiting 1799.03462 for next iteration
+[2025-11-11 08:30:04]No topics scheduled at 830
+[2025-11-11 08:30:04]Waiting 1795.76785 for next iteration
+[2025-11-11 09:00:00]No topics scheduled at 900
+[2025-11-11 09:00:00]Waiting 1799.043183 for next iteration
+[2025-11-11 09:30:02]No topics scheduled at 930
+[2025-11-11 09:30:02]Waiting 1797.549959 for next iteration
+[2025-11-11 10:00:09]No topics scheduled at 1000
+[2025-11-11 10:00:09]Waiting 1790.014218 for next iteration
+[2025-11-11 10:30:00]No topics scheduled at 1030
+[2025-11-11 10:30:00]Waiting 1799.011838 for next iteration
+[2025-11-11 11:00:02]No topics scheduled at 1100
+[2025-11-11 11:00:02]Waiting 1797.981935 for next iteration
+[2025-11-11 11:30:08]No topics scheduled at 1130
+[2025-11-11 11:30:08]Waiting 1791.088765 for next iteration
+[2025-11-11 11:51:35]Starting process with no issues
+[2025-11-11 11:51:36]No topics scheduled at 1130
+[2025-11-11 11:51:36]Waiting 503.265955 for next iteration
+[2025-11-11 12:00:00]No topics scheduled at 1200
+[2025-11-11 12:00:00]Waiting 1799.067203 for next iteration
+[2025-11-11 12:30:01]No topics scheduled at 1230
+[2025-11-11 12:30:01]Waiting 1798.006111 for next iteration
+[2025-11-11 12:40:20]Starting process with no issues
+[2025-11-11 12:40:21]No topics scheduled at 1230
+[2025-11-11 12:40:21]Waiting 1178.259362 for next iteration
+[2025-11-11 13:13:35]Starting process with no issues
+[2025-11-11 13:13:36]No topics scheduled at 1300
+[2025-11-11 13:13:36]Waiting 983.732372 for next iteration
+[2025-11-11 13:30:00]No topics scheduled at 1330
+[2025-11-11 13:30:00]Waiting 1799.038089 for next iteration
+
+[2025-11-11 13:53:52]
+---ERROR---
+null value in column "refresh_token" of relation "connected_accounts" violates not-null constraint
+DETAIL:  Failing row contains (daniel.villanueva@softcial.onmicrosoft.com, GoogleDrive, ya29.a0ATi6K2vCBvaUffzptIysJ6N1dxsrBD9WY6lcsNDCKdEg6sQfX2erdTZZX..., null, 1762894400).
+---ERROR---
+
+[2025-11-11 14:00:02]No topics scheduled at 1400
+[2025-11-11 14:00:02]Waiting 1797.801144 for next iteration
+[2025-11-11 14:30:00]No topics scheduled at 1430
+[2025-11-11 14:30:00]Waiting 1799.042266 for next iteration
+[2025-11-11 15:00:06]No topics scheduled at 1500
+[2025-11-11 15:00:06]Waiting 1793.981521 for next iteration
+[2025-11-11 15:30:00]No topics scheduled at 1530
+[2025-11-11 15:30:00]Waiting 1799.03687 for next iteration
+[2025-11-11 16:00:02]No topics scheduled at 1600
+[2025-11-11 16:00:02]Waiting 1797.956463 for next iteration
+[2025-11-11 16:30:00]No topics scheduled at 1630
+[2025-11-11 16:30:00]Waiting 1799.04316 for next iteration
+[2025-11-11 17:00:05]Starting orchestration with 7 sources at 1700
+
+[2025-11-11 17:00:29]
+Reading manifest...
+Manifest loaded
+Reading remote content metadata...
+Remote metadata loaded
+Downloading differences
+Downloaded 0 files
+No files detected, aborting...
+Registering changes to manifest...
+Manifest updated
+Cleaning local information...
+Local server cleaned
+
+
+[2025-11-11 17:00:29]
+Reading manifest...
+Manifest loaded
+Reading remote content metadata...
+Remote metadata loaded
+Downloading differences
+Downloaded 0 files
+No files detected, aborting...
+Registering changes to manifest...
+Manifest updated
+Cleaning local information...
+Local server cleaned
+
+
+[2025-11-11 17:00:30]
+Reading manifest...
+Manifest loaded
+Reading remote content metadata...
+Remote metadata loaded
+Downloading differences
+Downloaded 0 files
+No files detected, aborting...
+Registering changes to manifest...
+Manifest updated
+Cleaning local information...
+Local server cleaned
+
+
+[2025-11-11 17:00:33]
+Reading manifest...
+Manifest loaded
+Reading remote content metadata...
+Remote metadata loaded
+Downloading differences
+Downloaded 0 files
+No files detected, aborting...
+Registering changes to manifest...
+Manifest updated
+Cleaning local information...
+Local server cleaned
+
+
+[2025-11-11 17:00:33]
+Reading manifest...
+Manifest loaded
+Reading remote content metadata...
+Remote metadata loaded
+Downloading differences
+Downloaded 0 files
+No files detected, aborting...
+Registering changes to manifest...
+Manifest updated
+Cleaning local information...
+Local server cleaned
+
+
+[2025-11-11 17:00:33]
+Reading manifest...
+Manifest loaded
+Reading remote content metadata...
+Remote metadata loaded
+Downloading differences
+Downloaded 0 files
+No files detected, aborting...
+Registering changes to manifest...
+Manifest updated
+Cleaning local information...
+Local server cleaned
+
+
+[2025-11-11 17:00:36]
+Reading manifest...
+Manifest loaded
+Reading remote content metadata...
+Remote metadata loaded
+Downloading differences
+Downloaded 0 files
+No files detected, aborting...
+Registering changes to manifest...
+Manifest updated
+Cleaning local information...
+Local server cleaned
+
+[2025-11-11 17:00:38]Waiting 1761.645822 for next iteration
+[2025-11-11 17:30:01]Starting orchestration with 1 sources at 1730
+
+[2025-11-11 17:30:27]
+Reading manifest...
+Manifest loaded
+Reading remote content metadata...
+Remote metadata loaded
+Downloading differences
+Downloaded 0 files
+No files detected, aborting...
+Registering changes to manifest...
+Manifest updated
+Cleaning local information...
+Local server cleaned
+
+[2025-11-11 17:30:29]Waiting 1770.905619 for next iteration
+[2025-11-11 21:22:33]Waiting -1353.063136 for next iteration
+[2025-11-11 21:22:40]No topics scheduled at 2100
+[2025-11-11 21:22:40]Waiting 439.582721 for next iteration
+[2025-11-11 21:29:59]No topics scheduled at 2100
+[2025-11-11 21:29:59]Waiting 0.758071 for next iteration
+[2025-11-11 21:30:00]No topics scheduled at 2130
+[2025-11-11 21:30:00]Waiting 1799.126538 for next iteration
+[2025-11-11 22:00:02]No topics scheduled at 2200
+[2025-11-11 22:00:02]Waiting 1797.836119 for next iteration
+[2025-11-11 22:30:00]No topics scheduled at 2230
+[2025-11-11 22:30:00]Waiting 1799.013995 for next iteration
+[2025-11-11 23:00:11]No topics scheduled at 2300
+[2025-11-11 23:00:11]Waiting 1788.827415 for next iteration
+[2025-11-11 23:30:01]No topics scheduled at 2330
+[2025-11-11 23:30:01]Waiting 1798.988981 for next iteration
+[2025-11-12 06:32:21]Waiting 1658.977831 for next iteration
+[2025-11-12 09:18:49]Starting process with no issues
+[2025-11-12 09:18:50]No topics scheduled at 900
+[2025-11-12 09:18:50]Waiting 669.276065 for next iteration
+[2025-11-12 09:30:00]No topics scheduled at 930
+[2025-11-12 09:30:00]Waiting 1799.048846 for next iteration
+
+[2025-11-12 09:40:25]
+---ERROR---
+null value in column "refresh_token" of relation "connected_accounts" violates not-null constraint
+DETAIL:  Failing row contains (daniel.villanueva@softcial.onmicrosoft.com, GoogleDrive, ya29.a0ATi6K2u38leCE0W2covzoIHK8SiiDYzyOECuE2G1wn1u9ByQUlr1Aq0pw..., null, 1762965593).
+---ERROR---
+
+[2025-11-12 10:00:02]No topics scheduled at 1000
+[2025-11-12 10:00:02]Waiting 1797.954593 for next iteration
+[2025-11-12 10:30:00]No topics scheduled at 1030
+[2025-11-12 10:30:00]Waiting 1799.080228 for next iteration
+[2025-11-12 11:00:07]No topics scheduled at 1100
+[2025-11-12 11:00:07]Waiting 1792.709401 for next iteration
+[2025-11-12 11:30:01]No topics scheduled at 1130
+[2025-11-12 11:30:01]Waiting 1798.517816 for next iteration
+
+[2025-11-12 11:44:37]
+---ERROR---
+null value in column "refresh_token" of relation "connected_accounts" violates not-null constraint
+DETAIL:  Failing row contains (daniel.villanueva@softcial.onmicrosoft.com, GoogleDrive, ya29.a0ATi6K2sOZaX6xSV2wRlZSw5J_lcUmY8f_sws79tKY6xXFUuxtWlIa-1eo..., null, 1762973046).
+---ERROR---
+
+[2025-11-12 12:00:01]No topics scheduled at 1200
+[2025-11-12 12:00:01]Waiting 1798.119029 for next iteration
+[2025-11-12 12:30:05]No topics scheduled at 1230
+[2025-11-12 12:30:05]Waiting 1794.227124 for next iteration
+[2025-11-12 13:00:00]No topics scheduled at 1300
+[2025-11-12 13:00:00]Waiting 1799.042839 for next iteration
+[2025-12-18 09:46:56]Starting process with no issues
+[2025-12-18 09:46:57]No topics scheduled at 930
+[2025-12-18 09:46:57]Waiting 782.947598 for next iteration
+[2025-12-18 09:53:48]
+            DELETE FROM public.sources WHERE topic = 'financials' AND id = '1WvFUhtR9fsjUP2bVc4h5NdqzXikLL8P8'
+        
+[2025-12-18 09:53:49]
+            DELETE FROM public.financials WHERE drive_id = '1WvFUhtR9fsjUP2bVc4h5NdqzXikLL8P8'
+        
+[2025-12-18 09:53:50]
+            DELETE FROM public.manifests WHERE drive_id = '1WvFUhtR9fsjUP2bVc4h5NdqzXikLL8P8' AND topic = 'financials'
+        
+
+[2025-12-18 09:55:27]
+---ERROR---
+only '%s', '%b', '%t' are allowed as placeholders, got '%)'
+---ERROR---
+
+[2025-12-18 10:00:00]No topics scheduled at 1000
+[2025-12-18 10:00:00]Waiting 1799.147865 for next iteration
+[2025-12-18 10:30:02]No topics scheduled at 1030
+[2025-12-18 10:30:02]Waiting 1797.474125 for next iteration
+[2025-12-18 11:00:07]No topics scheduled at 1100
+[2025-12-18 11:00:07]Waiting 1792.257953 for next iteration

@@ -52,7 +52,7 @@ export default function Header() {
         <img src={appLogo} width={"150px"} alt="" />        
         <div>
           <Link to="/home" style={linkStyle}>Home</Link>
-          <Link to="/chat" style={linkStyle}>Chat</Link>
+          <Link to="/connections" style={linkStyle}>Connections</Link>
           <Link to="/topics" style={linkStyle}>Topics</Link>
           <button
             style={{

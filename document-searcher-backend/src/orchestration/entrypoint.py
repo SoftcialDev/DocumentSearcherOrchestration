@@ -1,7 +1,6 @@
 from modules.databases import PostgreSQLConnection
 from modules.logs import write_line, write_block
-from modules import sequences
-from api import sources
+from modules.sequences import local, sharepoint, googledrive
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from multiprocessing import Process, Queue
@@ -21,9 +20,11 @@ def process_source(task: Dict[str, Any]) -> None:
     topic = task.get("topic", None)
     if composite and source and topic:
         if source == "Sharepoint":
-            sequences.start_sharepoint_sequence(composite, topic)
+            sharepoint.start_sharepoint_sequence(composite, topic)
         elif source == "Onedrive":
             pass
+        elif source == "Google":
+            googledrive.start_googledrive_sequence()
         
 
 def _worker(task_q: Queue) -> None:
@@ -129,11 +130,11 @@ def manual_refresh(topic_name):
     rows = results["rows"]
     for r in rows:
         composite = r["id"] if isinstance(r, dict) else r[0]
-        sequences.start_sharepoint_sequence(composite, topic_name)
+        sharepoint.start_sharepoint_sequence(composite, topic_name)
 
 def file_refresh(topic, file_path, file_name):
     file_id = str(uuid.uuid4())
-    sequences.start_local_sequence(file_path, file_name, file_id, topic)
+    local.start_local_sequence(file_path, file_name, file_id, topic)
     values = [
         (
             topic,
@@ -143,7 +144,7 @@ def file_refresh(topic, file_path, file_name):
             file_id,
         ),
     ]
-    sources.add_sources(values)
+    # sources.add_sources(values)
 
 ##############
 # Entrypoint #

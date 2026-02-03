@@ -1,9 +1,9 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Header from "./components/Header";
-import Chat from "./pages/Chat";
 import Topics from "./pages/Topics/Topics";
 import Home from "./pages/Home";
 import ContentWrapper from "./components/ContentWrapper";
+import Connections from "./pages/Connections/Connections";
 
 export default function App() {
   return (
@@ -13,7 +13,7 @@ export default function App() {
         <ContentWrapper>
           <Routes>
             <Route path="/home" element={<Home />} />
-            <Route path="/chat" element={<Chat />} />
+            <Route path="/connections" element={<Connections />} />
             <Route path="/topics" element={<Topics />} />
           </Routes>
         </ContentWrapper>

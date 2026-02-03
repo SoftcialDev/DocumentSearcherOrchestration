@@ -365,7 +365,6 @@ def refresh_embeddings(embeddings: list, logs: list):
         postgresql.execute_many(group["query"], group["records"])
         logs.append(f"Updated {len(group['records'])} records from {table}.")
 
-
 def delete_embeddings(embeddings: list, logs: list):
     postgresql =  PostgreSQLConnection()
 

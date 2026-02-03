@@ -10,9 +10,9 @@ import msal, requests, os, time, httpx, threading
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
-##########################
-# Sources Authentication #
-##########################
+###################
+# Sharepoint Auth #
+###################
 def get_sharepoint_token(logs: list):
 
     headers = {
@@ -38,7 +38,10 @@ def get_sharepoint_token(logs: list):
         logs.append(f"Sharepoint Token request failed: {e}")
         logs.append("---ERROR---")
         return None
-    
+
+#################
+# OneDrive Auth #
+#################
 def get_onedrive_token(logs: list):
 
     ONEDRIVEENTRATENANT = get_secret("ONEDRIVEENTRATENANT")
@@ -122,14 +125,14 @@ def verify_entra_token():
             if not key:
                 raise HTTPException(status_code=401, detail="Invalid token key")
 
-            # Let python-jose verify signature only; we’ll validate aud/iss ourselves.
+            # Let python-jose verify signature only
             claims = jwt.decode(
                 token,
                 key,
                 algorithms=["RS256"],
                 options={
-                    "verify_aud": False,  # we'll check manually
-                    "verify_iss": False,  # we'll check manually
+                    "verify_aud": False,  # checked manually
+                    "verify_iss": False,  # checked manually
                     "verify_at_hash": False,
                 },
             )
@@ -197,3 +200,55 @@ class SecretStore:
 
 def get_secret(name: str) -> str:
     return SecretStore().get(name)
+
+###############
+# Google Auth #
+###############
+def mk_code_verifier():
+    return base64.urlsafe_b64encode(os.urandom(64)).rstrip(b"=").decode()
+
+def mk_code_challenge(verifier: str):
+    digest = hashlib.sha256(verifier.encode()).digest()
+    return base64.urlsafe_b64encode(digest).rstrip(b"=").decode()
+
+def get_tokens(user_id: str):
+    rec = OAUTH_STORE.get(user_id)
+    if not rec:
+        raise HTTPException(status_code=404, detail="No Google tokens stored for user")
+    return rec
+
+def store_tokens(user_id: str, data: dict):
+    expires_at = int(time.time()) + int(data.get("expires_in", 3600)) - 30
+    record = OAUTH_STORE.get(user_id, {})
+    record["access_token"] = data["access_token"]
+    record["expires_at"] = expires_at
+    record["scope"] = data.get("scope")
+    if "refresh_token" in data and data["refresh_token"]:
+        record["refresh_token"] = data["refresh_token"]
+    OAUTH_STORE[user_id] = record
+    print(record)
+
+
+def refresh_access_token(user_id: str):
+    rec = get_tokens(user_id)
+    rt = rec.get("refresh_token")
+    if not rt:
+        raise HTTPException(status_code=400, detail="No refresh_token stored")
+    payload = {
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET,
+        "refresh_token": rt,
+        "grant_type": "refresh_token",
+    }
+    r = requests.post(GOOGLE_TOKEN, data=payload, timeout=15)
+    if r.status_code != 200:
+        raise HTTPException(status_code=502, detail=f"Refresh error: {r.text}")
+    data = r.json()
+    store_tokens(user_id, data)
+    return OAUTH_STORE[user_id]["access_token"]
+
+def get_valid_access_token(user_id: str):
+    rec = get_tokens(user_id)
+    if rec.get("access_token") and rec.get("expires_at", 0) > int(time.time()):
+        return rec["access_token"]
+    return refresh_access_token(user_id)

@@ -1,13 +1,15 @@
-from server import app
-from setup import database_setup, env_checkup, ram_checkup
 from dotenv import load_dotenv
+load_dotenv()
+
+from setup import database_setup, env_checkup, ram_checkup
 from orchestration.entrypoint import start_orchestration
 from sentence_transformers import SentenceTransformer
 from model_registry import set_model
-from modules.logs import write_line, write_block
-import logging, uvicorn, time
+from modules.logs import write_line
+import logging, uvicorn
 
-load_dotenv()
+
+# Configure loggs
 logging.basicConfig(level=logging.WARNING)
 for name in [
     "azure",                         # all Azure SDK
@@ -27,16 +29,17 @@ if __name__ == "__main__":
     # Run a check for minimal configuration needs
     errors = 0
     warnings = 0
-    
+
+    """
     # Checks hardware
-    #if not ram_checkup(8, logs) :
-    #    write_line("---CRITICAL---")
-    #    logging.critical(f"Unable to start process, errors detected in RAM checkup")
-    #    write_line("---CRITICAL---")
-    #    exit()
+    if not ram_checkup(8, logs) :
+        write_line("---CRITICAL---")
+        logging.critical(f"Unable to start process, errors detected in RAM checkup")
+        write_line("---CRITICAL---")
+        exit()
 
     # Check variables
-    """env_error, env_warning = env_checkup()
+    env_error, env_warning = env_checkup()
     warnings += env_warning
 
     if env_error:
@@ -71,7 +74,7 @@ if __name__ == "__main__":
         write_line("Starting process with no issues")
 
     # Start the orchestration process, does not require Flask to be running
-    start_orchestration()
+    # start_orchestration()
     uvicorn.run(
         "server:app",
         host="0.0.0.0",

@@ -25,7 +25,7 @@ export default function Topics() {
 
   /* ---------- fetch topics list ---------- */
   useEffect(() => {
-    apiFetch("/api/list-topics")
+    apiFetch("/api/topics/list-topics")
       .then((r) => r.json())
       .then(setTopics)
       .catch((err) => console.error("Error fetching topics:", err));
@@ -42,7 +42,7 @@ export default function Topics() {
     if (!deleteTopic) return;
 
     try {
-      const res = await apiFetch("/api/delete-topic", {
+      const res = await apiFetch("/api/topics/delete-topic", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ topic_name: deleteTopic }),
@@ -61,7 +61,7 @@ export default function Topics() {
     if (!refreshTopic) return;
 
     try {
-      const res = await apiFetch("/api/refresh-topic", {
+      const res = await apiFetch("/api/topics/refresh-topic", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ topic: refreshTopic }),

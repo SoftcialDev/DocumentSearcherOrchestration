@@ -20,7 +20,7 @@ def write_line(line: str, console=True) -> None:
     
     with _file_lock:
         with open(PATH, "a", encoding="utf-8", newline="\n") as f:
-            f.write(line + "\n")
+            f.write(f"[{datetime.now():%Y-%m-%d %H:%M:%S}]" + line + "\n")
             
     if console:
         logging.info(f"{line}")
@@ -37,7 +37,7 @@ def write_block(records: list[str] | Iterable[str], trigger: str, console=True) 
     
     ts = datetime.now(timezone.utc).isoformat()
     # Build one chunk to avoid partial interleaving
-    lines = [ts, *(str(s) for s in records), ""]
+    lines = [f"[{datetime.now():%Y-%m-%d %H:%M:%S}]", *(str(s) for s in records), ""]
     chunk = "\n" + "\n".join(lines) + "\n"
 
     with _file_lock:

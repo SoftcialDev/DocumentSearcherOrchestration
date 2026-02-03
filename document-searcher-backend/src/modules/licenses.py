@@ -2,8 +2,6 @@ from fastapi.responses import JSONResponse
 from modules.authenticators import get_secret
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
-from fastapi import HTTPException
-from api import topics
 from typing import Dict, Any, Optional, Callable
 from functools import wraps
 import time, requests, base64, jwt, os, json
